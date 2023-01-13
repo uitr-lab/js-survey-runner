@@ -32,13 +32,26 @@ export class SurveyRenderer extends EventEmitter{
 
 		this._data=data;
 
+		this._formData={}
 
-		var form= new Element('form', {
+		this._container=new Element('div');
+
+
+		var form= this._container.appendChild(new Element('form', {
 			"class":"survey-view"
-		});
+		}));
 
 		this._element=form;
 
+
+		this._dataPreview=this._container.appendChild(new Element('pre',{
+		    "class":"survey-data",
+			html:JSON.stringify(this._formData, null, '   ')
+		}))
+
+		this.on('update',()=>{
+			this._dataPreview.innerHTML=JSON.stringify(this._formData, null, '   ');
+		})
 
 		if(data.type=='set'&&data.items){
 			form.classList.add('set-view');
@@ -53,8 +66,27 @@ export class SurveyRenderer extends EventEmitter{
 			this._renderNode(data);
 		}
 
-		return form;
 
+		
+
+		form.addEventListener('change', ()=>{
+			this._update();
+		});
+
+
+
+		return  this._container;
+
+
+	}
+
+	_update(){
+
+		var formDataObject=new FormData(this._element);
+		for (const key of formDataObject.keys()) {
+			this._formData[key]=formDataObject.get(key);
+		}	
+		this.emit('update');
 
 	}
 
@@ -101,6 +133,9 @@ export class SurveyRenderer extends EventEmitter{
 					html:"Next",
 					events:{
 						click:(e)=>{
+
+							this._update();
+
 							e.stopPropagation();
 							node.parentNode.removeChild(node);
 
@@ -157,6 +192,9 @@ export class SurveyRenderer extends EventEmitter{
 				html:"Back",
 				events:{
 					click:(e)=>{
+
+						this._update();
+
 						e.stopPropagation();
 						set.parentNode.removeChild(set);
 						this._renderSetNavigation(items, --i, container, complete);
@@ -175,6 +213,9 @@ export class SurveyRenderer extends EventEmitter{
 				html:"Complete",
 				events:{
 					click:(e)=>{
+
+						this._update();
+
 						e.stopPropagation();
 						set.parentNode.removeChild(set);
 						this.emit('complete');
@@ -196,12 +237,39 @@ export class SurveyRenderer extends EventEmitter{
 			html:"Next",
 			events:{
 				click:(e)=>{
+
+					this._update();
+
 					e.stopPropagation();
 					set.parentNode.removeChild(set);
 					this._renderSetNavigation(items, ++i, container, complete);
 				}
 			}
 		}))
+
+	}
+
+	getFormData(){
+		return JSON.parse(JSON.stringify(this._formData));
+	}
+
+
+	setFormValue(name, value){
+
+		value=JSON.parse(JSON.stringify(value));
+
+		this._formData[name]=value;
+
+	}
+
+	setFormData(obj){
+
+		obj=JSON.parse(JSON.stringify(obj));
+		Object.keys(obj).forEach((key)=>{
+			this._formData[key]=obj[key];
+		})
+
+		this.emit('update');
 
 	}
 
@@ -221,6 +289,17 @@ export class SurveyRenderer extends EventEmitter{
 			this._renderItem(item, container);
 
 		});
+
+
+		Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el)=>{
+
+			if(typeof el.name=='string'&&typeof this._formData[el.name]!='undefined'){
+				el.value=this._formData[el.name];
+			}
+			
+		});
+
+
 
 
 
