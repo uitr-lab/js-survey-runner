@@ -94,15 +94,77 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
 SurveyRenderer.addItem('radio', (item, container) => {
 
 
+	if(item.label){
 
-	(item.values||['a', 'b', 'c']).forEach((v)=>{
+		container=container.appendChild(new Element('label', {
+			html: item.label
+		}));
+
+	}
+
+
+
+	var values=(item.values||['a', 'b', 'c']);
+
+	var labels=null;
+
+	if(typeof values=='string'){
+
+		if(values[0]=='['){
+			
+			values=JSON.parse(values);
+		
+		}else if(values[0]=='{'){
+			
+			var obj=JSON.parse(values);
+			values=Object.keys(obj);
+			labels=[];
+			values.forEach((v)=>{
+				labels.push(obj[v]);
+			});
+
+
+		}else{
+
+			values=values.split(',').map((v)=>{
+				return v.trim();
+			});
+
+
+		}
+
+	}
+
+	labels=labels||(item.labels||values);
+
+
+	if(typeof labels=='string'){
+
+		if(labels[0]=='['){
+			
+			labels=JSON.parse(labels);
+		
+		}else{
+
+			labels=labels.split(',').map((l)=>{
+				return l.trim();
+			});
+
+
+		}
+
+	}
+
+
+
+	values.forEach((v, index)=>{
 
 
 
 
 		var radio = container.appendChild(new Element('label', {
 			"for":v,
-			html:v
+			html:labels[index]
 		}));
 
 		 radio.appendChild(new Element('input',{
