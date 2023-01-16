@@ -37,7 +37,7 @@ export class Element {
 			}
 
 
-			if((['type', 'value', 'href', 'target', 'name', 'for']).indexOf(key)>=0){
+			if((['type', 'value', 'href', 'target', 'name', 'for', 'checked']).indexOf(key)>=0){
 				el[key]=v
 			}
 

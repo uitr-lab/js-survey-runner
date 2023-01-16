@@ -142,7 +142,7 @@ export class SurveyRenderer extends EventEmitter{
 							
 							var nextNode=data.nodes[0];
 
-							var index=(()=>{ return eval('(function(){ '+data.navigationLogic+' })()')})();
+							var index=((formData)=>{ return eval('(function(){ '+data.navigationLogic+' })()')})(this.getFormData());
 
 							if(typeof index =='number'){
 								index=parseInt(index);
@@ -294,12 +294,19 @@ export class SurveyRenderer extends EventEmitter{
 		Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el)=>{
 
 			if(typeof el.name=='string'&&typeof this._formData[el.name]!='undefined'){
+
+				if(el.type==='checkbox'){
+					el.checked=this._formData[el.name]==='on';
+					return;
+				}
+
 				el.value=this._formData[el.name];
 			}
 			
 		});
 
 
+		this._update();
 
 
 
