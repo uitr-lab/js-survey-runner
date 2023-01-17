@@ -17,6 +17,23 @@ export class SurveyRenderer extends EventEmitter{
 
 	constructor(){
 		super();
+
+		this.on('renderPage',()=>{
+			setTimeout(()=>{
+				this._container.scrollTo(0,0);
+				if(this._container.parentNode){
+					this._container.parentNode.scrollTo(0,0);
+				}
+			}, 100);
+			
+		})
+
+	}
+
+
+	displayInfo(){
+		this._displayInfo=true;
+		return this;
 	}
 
 
@@ -44,14 +61,18 @@ export class SurveyRenderer extends EventEmitter{
 		this._element=form;
 
 
-		this._dataPreview=this._container.appendChild(new Element('pre',{
-		    "class":"survey-data",
-			html:JSON.stringify(this._formData, null, '   ')
-		}))
+		if(this._displayInfo){
 
-		this.on('update',()=>{
-			this._dataPreview.innerHTML=JSON.stringify(this._formData, null, '   ');
-		})
+			this._dataPreview=this._container.appendChild(new Element('pre',{
+			    "class":"survey-data",
+				html:JSON.stringify(this._formData, null, '   ')
+			}))
+
+			this.on('update',()=>{
+				this._dataPreview.innerHTML=JSON.stringify(this._formData, null, '   ');
+			})
+
+		}
 
 		if(data.type=='set'&&data.items){
 			form.classList.add('set-view');
@@ -114,16 +135,42 @@ export class SurveyRenderer extends EventEmitter{
 		return matches[0];
 	}
 
+	_findNextNodePrefix(uuid, data){
+		var matches=data.nodes.filter((node)=>{
+			return node.uuid===uuid;
+		})
+
+		if(matches.length==0){
+			matches=data.nodes.filter((node)=>{
+				return (node.uuid||node).indexOf(uuid)===0;
+			});
+		}
+
+		if(matches.length==0){
+			return null;
+		}
+
+		var match=matches[0];
+		if(typeof match=='string'){
+			return this._findNode(match);
+		}
+
+		return match;
+	}
+
 	_renderNode(data, container){
 
 		container=container||this._element;
 
 		var node=container.appendChild(new Element('main'));
 
-		node.appendChild(new Element('h1',{
-			"class":'node-label',
-			html:data.name
-		}));
+		if(this._displayInfo){
+
+			node.appendChild(new Element('h1',{
+				"class":'node-label',
+				html:data.name
+			}));
+		}
 		
 		this._renderSetNavigation(data.items , 0, node, (set)=>{
 
@@ -142,7 +189,7 @@ export class SurveyRenderer extends EventEmitter{
 							
 							var nextNode=data.nodes[0];
 
-							var index=((formData)=>{ return eval('(function(){ '+data.navigationLogic+' })()')})(this.getFormData());
+							var index=((formData, renderer)=>{ return eval('(function(){ '+data.navigationLogic+' })()')})(this.getFormData(), this);
 
 							if(typeof index =='number'){
 								index=parseInt(index);
@@ -150,7 +197,8 @@ export class SurveyRenderer extends EventEmitter{
 							}
 
 							if(typeof index=='string'){
-								nextNode=this._findNode(index);
+
+								nextNode=this._findNextNodePrefix(index, data)||this._findNode(index);
 								//throw 'Not implemented: Navigation to node uuid';
 							}
 
@@ -166,6 +214,7 @@ export class SurveyRenderer extends EventEmitter{
 			}
 		});
 
+		this.emit('renderNode');
 
 
 
@@ -254,6 +303,13 @@ export class SurveyRenderer extends EventEmitter{
 	}
 
 
+	getFormValue(name){
+
+		return this.getFormData()[name];
+
+	}
+
+
 	setFormValue(name, value){
 
 		value=JSON.parse(JSON.stringify(value));
@@ -279,10 +335,12 @@ export class SurveyRenderer extends EventEmitter{
 
 		container=container||this._element;
 
-		container.appendChild(new Element('h2',{
-				"class":'set-label',
-				html:data.name
-			}));
+		if(this._displayInfo){
+			container.appendChild(new Element('h2',{
+					"class":'set-label',
+					html:data.name
+				}));
+		}
 
 		data.items.forEach((item)=>{
 
@@ -305,9 +363,9 @@ export class SurveyRenderer extends EventEmitter{
 			
 		});
 
-
 		this._update();
-
+		this.emit('renderSet');
+		this.emit('renderPage'); 
 
 
 	}
