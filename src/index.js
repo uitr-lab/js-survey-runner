@@ -17,17 +17,19 @@ import Twig from 'twig';
 
 
 
+const labelTemplate=(label, renderer)=>{
+	return Twig.twig({
+	    data: label
+	}).render(renderer.getFormData()||{});
+}
+
 
 
 SurveyRenderer.addItem('markdown', (item, container, renderer) => {
 
 
-	var template = Twig.twig({
-	    data: item.text
-	});
-
 	
-	var markdown=template.render(renderer.getFormData()||{});
+	var markdown= labelTemplate(item.text, renderer);
 	
 
 	var content = marked.parse(markdown);
@@ -39,21 +41,22 @@ SurveyRenderer.addItem('markdown', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('textfield', (item, container) => {
+SurveyRenderer.addItem('textfield', (item, container, renderer) => {
 
 	var label = null;
 
 	if (item.label) {
 		label = container.appendChild(new Element('label', {
-			html: item.label
+			html: labelTemplate(item.label, renderer)
 		}));
 
 	}
 
 
+
 	var input = (label || container).appendChild(new Element('input', {
 		type: "text",
-		name: item.fieldName,
+		name: labelTemplate(item.fieldName, renderer)
 	}));
 
 	if (item.placeholder) {
@@ -70,16 +73,15 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
 	if(item.label){
 
 		container=container.appendChild(new Element('label', {
-			html: item.label
+			html: labelTemplate(item.label, renderer)
 		}));
 
 	}
 
-
 	var checkbox=container.appendChild(new Element('input', {
 		type:"checkbox",
 		checked:!!item.checked,
-		name:item.fieldName
+		name:labelTemplate(item.fieldName, renderer)
 	}));
 
 	checkbox.addEventListener('change',()=>{
@@ -91,13 +93,13 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
 
 });
 
-SurveyRenderer.addItem('radio', (item, container) => {
+SurveyRenderer.addItem('radio', (item, container, renderer) => {
 
 
 	if(item.label){
 
 		container=container.appendChild(new Element('label', {
-			html: item.label
+			html: labelTemplate(item.label, renderer)
 		}));
 
 	}
@@ -156,7 +158,6 @@ SurveyRenderer.addItem('radio', (item, container) => {
 	}
 
 
-
 	values.forEach((v, index)=>{
 
 
@@ -164,13 +165,13 @@ SurveyRenderer.addItem('radio', (item, container) => {
 
 		var radio = container.appendChild(new Element('label', {
 			"for":v,
-			html:labels[index]
+			html:labelTemplate(labels[index], renderer)
 		}));
 
 		 radio.appendChild(new Element('input',{
 				type:'radio',
 				value:v,
-				name:item.fieldName
+				name:labelTemplate(item.fieldName, renderer)
 			}))
 
 	})
@@ -178,12 +179,29 @@ SurveyRenderer.addItem('radio', (item, container) => {
 
 });
 
+SurveyRenderer.addItem('defaultData', (item, container, renderer) => {
 
-SurveyRenderer.addItem('label', (item, container) => {
+
+	var data=JSON.parse(item.data);
+	if(data){
+
+		Object.keys(data).forEach((key)=>{
+			if(typeof renderer.getFormValue(key)=='undefined'){
+				renderer.setFormValue(key, data[key]);
+			}
+		});
+
+	}
+
+
+});
+
+
+SurveyRenderer.addItem('label', (item, container, renderer) => {
 
 
 	container.appendChild(new Element('label', {
-		html: item.text
+		html: labelToMarkdown(item.text, renderer)
 	}));
 
 
