@@ -105,7 +105,7 @@ export class SurveyRenderer extends EventEmitter{
 
 		var formDataObject=new FormData(this._element);
 		for (const key of formDataObject.keys()) {
-			this._formData[key]=formDataObject.get(key);
+			this._currentFormData()[key]=formDataObject.get(key);
 		}	
 		this.emit('update');
 
@@ -217,7 +217,6 @@ export class SurveyRenderer extends EventEmitter{
 		this.emit('renderNode');
 
 
-
 	}
 
 
@@ -316,6 +315,18 @@ export class SurveyRenderer extends EventEmitter{
 
 		this._formData[name]=value;
 
+		this.emit('update');
+
+	}
+
+	updateFormValue(name, value){
+
+		value=JSON.parse(JSON.stringify(value));
+
+		this._currentFormData()[name]=value;
+
+		this.emit('update');
+
 	}
 
 	setFormData(obj){
@@ -329,6 +340,44 @@ export class SurveyRenderer extends EventEmitter{
 
 	}
 
+
+	/**
+	 * return a reference to the current form data object. 
+	 * this is used to store form field values on form updates.
+	 *
+	 * This object may not reference the root formData object for example when iterating a loop, 
+	 * it's reference me be set to an item in an array of values
+	 */
+	_currentFormData(){
+
+		if(this._useFormData){
+			return this._useFormData;
+		}
+
+		return this._formData;
+	}
+
+	useFormData(){
+		delete this._useFormData;
+	}
+	useFormDataFieldArray(key, index){
+
+		this._useFormData=this._useFormData||this._formData; //copy reference;
+
+		if(!Array.isArray(this._useFormData[key])){
+			this._useFormData[key]=[];
+		}
+
+		if(typeof this._useFormData[key][index]=='undefined'){
+			this._useFormData[key][index]={};
+		}
+
+		this._useFormData=this._useFormData[key][index];
+
+		
+
+
+	}
 
 	_renderSet(data, container){
 
@@ -351,14 +400,14 @@ export class SurveyRenderer extends EventEmitter{
 
 		Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el)=>{
 
-			if(typeof el.name=='string'&&typeof this._formData[el.name]!='undefined'){
+			if(typeof el.name=='string'&&typeof this._currentFormData()[el.name]!='undefined'){
 
 				if(el.type==='checkbox'){
-					el.checked=this._formData[el.name]==='on';
+					el.checked=this._currentFormData()[el.name]==='on';
 					return;
 				}
 
-				el.value=this._formData[el.name];
+				el.value=this._currentFormData()[el.name];
 			}
 			
 		});

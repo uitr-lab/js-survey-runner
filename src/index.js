@@ -86,7 +86,7 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
 
 	checkbox.addEventListener('change',()=>{
 		if(!checkbox.checked){
-			renderer.setFormValue(item.fieldName, "off");
+			renderer.updateFormValue(item.fieldName, "off");
 		}
 	});
 
@@ -196,12 +196,71 @@ SurveyRenderer.addItem('defaultData', (item, container, renderer) => {
 
 });
 
+SurveyRenderer.addItem('script', (item, container, renderer) => {
+
+
+	var script=item.script;
+
+	if(script){
+
+		var resp=((formData, renderer)=>{ return eval('(function(){ '+script+' })()')})( renderer.getFormData(), renderer);
+
+
+		if(!resp){
+			return;
+		}
+
+		if(typeof resp.type=='string'){
+			renderer.renderItem(resp, container);
+		}
+
+		if(Array.isArray(resp)){
+			resp.forEach((item)=>{
+				renderer.renderItem(item, container);
+			});
+		}
+
+
+		if(resp instanceof HTMLElement){
+			container.appendChild(resp);
+		}
+
+		if(typeof resp=='string'){
+			container.appendChild(new Element('span',{
+				html:labelTemplate(resp, renderer)
+			}));
+		}
+
+
+
+	}
+
+
+});
+
+
+SurveyRenderer.addItem('html', (item, container, renderer) => {
+
+
+	var html=item.html;
+
+	if(html){
+
+		container.appendChild(new Element('span',{
+			html:labelTemplate(html, renderer)
+		}));
+
+	}
+
+
+});
+
 
 SurveyRenderer.addItem('label', (item, container, renderer) => {
 
 
 	container.appendChild(new Element('label', {
-		html: labelToMarkdown(item.text, renderer)
+		html: labelTemplate(item.text, renderer)
 	}));
 
 
@@ -215,8 +274,8 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer) => {
 	}));
 
 	if(item.legend){
-		field.appendChild(new Element('legend', {
-			html:item.legend
+		fieldset.appendChild(new Element('legend', {
+			html:labelTemplate(item.legend, renderer)
 		}));
 	}
 
