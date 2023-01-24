@@ -96,9 +96,13 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
 SurveyRenderer.addItem('radio', (item, container, renderer) => {
 
 
+	container=container.appendChild(new Element('span', {
+		"class":"radio"
+	}));
+
 	if(item.label){
 
-		container=container.appendChild(new Element('label', {
+		container.appendChild(new Element('label', {
 			html: labelTemplate(item.label, renderer)
 		}));
 

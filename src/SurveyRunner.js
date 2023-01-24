@@ -84,6 +84,7 @@ export class SurveyRenderer extends EventEmitter{
 
 
 		if(data.type=='section'&&data.items){
+
 			this._renderNode(data);
 		}
 
@@ -160,6 +161,8 @@ export class SurveyRenderer extends EventEmitter{
 
 	_renderNode(data, container){
 
+		this.useFormData(); //reset any loop data offsets
+
 		container=container||this._element;
 
 		var node=container.appendChild(new Element('main'));
@@ -189,7 +192,7 @@ export class SurveyRenderer extends EventEmitter{
 							
 							var nextNode=data.nodes[0];
 
-							var index=((formData, renderer)=>{ return eval('(function(){ '+data.navigationLogic+' })()')})(this.getFormData(), this);
+							var index=((formData, pageData, renderer)=>{ return eval('(function(){ '+data.navigationLogic+' })()')})(this.getFormData(), this.getPageData(), this);
 
 							if(typeof index =='number'){
 								index=parseInt(index);
@@ -297,8 +300,24 @@ export class SurveyRenderer extends EventEmitter{
 
 	}
 
+	/**
+	 * returns the entire data object containing all data collected by forms and pages so far
+	 * use getData if possible as it returns the data in the context of the current page (which may be the same data 
+	 * as returned by this method)
+	 */
 	getFormData(){
 		return JSON.parse(JSON.stringify(this._formData));
+	}
+
+
+	/**
+	 * For forms with nested pages and loops, this method will return the data in the
+	 * context of the current page.
+	 */
+	getPageData(){
+
+		return JSON.parse(JSON.stringify(this._currentFormData()));
+
 	}
 
 
