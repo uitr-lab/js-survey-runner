@@ -379,7 +379,12 @@ export class SurveyRenderer extends EventEmitter{
 	useFormData(){
 		delete this._useFormData;
 	}
+
 	useFormDataFieldArray(key, index){
+
+		if(typeof index!='number'){
+			index=0;
+		}
 
 		this._useFormData=this._useFormData||this._formData; //copy reference;
 

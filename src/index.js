@@ -14,6 +14,10 @@ import {
 
 import Twig from 'twig';
 
+import {
+	toDataURL
+} from 'qrcode';
+
 
 
 
@@ -194,6 +198,23 @@ SurveyRenderer.addItem('defaultData', (item, container, renderer) => {
 				renderer.setFormValue(key, data[key]);
 			}
 		});
+
+	}
+
+
+});
+
+SurveyRenderer.addItem('qrcode', (item, container, renderer) => {
+
+
+	var data=item.data;
+	if(data){
+
+		data=labelTemplate(data, renderer);
+		
+		var qrcode=container.appendChild(new Element('span',{"class":"qr-code"}));
+		toDataURL(data).then((data)=>{ qrcode.innerHTML = '<img style="" src="'+data+'"/>'; }); 
+		
 
 	}
 
