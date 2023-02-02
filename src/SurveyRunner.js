@@ -93,12 +93,98 @@ export class SurveyRenderer extends EventEmitter{
 
 		form.addEventListener('change', ()=>{
 			this._update();
+			this._validate();
 		});
 
 
 
 		return  this._container;
 
+
+	}
+	_setForwardBtn(btn){
+		this._forwardBtns=this._forwardBtns||[];
+		this._forwardBtns.push(btn);
+
+		if(this._disableForward){
+			btn.disabled=true;
+			btn.classList.add('disabled');
+		}
+	}
+
+	disableForwardNavigation(){
+
+		this._disableForward=true;
+		(this._forwardBtns||[]).forEach((btn)=>{
+			btn.disabled=true;
+			btn.classList.add('disabled');
+		});
+
+	}
+
+	enableForwardNavigation(){
+		delete this._disableForward;
+		(this._forwardBtns||[]).forEach((btn)=>{
+			btn.disabled=null;
+			btn.classList.remove('disabled');
+		});
+
+	}
+
+
+	addValidator(validator){
+
+		this._validators=this._validators||[];
+		this._validators.push(validator);
+
+		//automatically disable forward navigation on add validator
+		this.disableForwardNavigation();
+
+	}
+
+
+	addTransform(transform){
+
+
+		this._transforms=this._transforms||[];
+		this._transforms.push(transform);
+
+	}
+
+
+	getInput(name){
+
+		var results=Array.prototype.slice.call(this._element.querySelectorAll("*")).filter((el)=>{
+			return el.name===name;
+		});
+
+
+		return results[0].parentNode;
+
+	}
+
+	_validate(){
+
+		Promise.all((this._validators||[]).map((validator)=>{
+
+			return new Promise((resolve, reject)=>{
+
+				resolve(validator(this.getFormData(), this.getPageData()));
+				
+			});
+
+		})).then((results)=>{
+
+			console.log(results);
+			this.enableForwardNavigation();
+
+
+		}).catch((errors)=>{
+
+			console.log(errors);
+			this.disableForwardNavigation();
+
+		});
 
 	}
 
@@ -108,6 +194,17 @@ export class SurveyRenderer extends EventEmitter{
 		for (const key of formDataObject.keys()) {
 			this._currentFormData()[key]=formDataObject.get(key);
 		}	
+
+		(this._transforms||[]).forEach((transform)=>{
+			try{
+				
+				transform();
+
+			}catch(e){
+				console.error(e);
+			}
+		});
+
 		this.emit('update');
 
 	}
@@ -159,9 +256,16 @@ export class SurveyRenderer extends EventEmitter{
 		return match;
 	}
 
+	_resetContext(){
+		this.useFormData(); //reset any loop data offsets
+		this._disableForward=false;
+		delete this._validators;
+		delete this._transforms;
+	}
+
 	_renderNode(data, container){
 
-		this.useFormData(); //reset any loop data offsets
+		this._resetContext()
 
 		container=container||this._element;
 
@@ -194,23 +298,35 @@ export class SurveyRenderer extends EventEmitter{
 
 							var index=((formData, pageData, renderer)=>{ return eval('(function(){ '+data.navigationLogic+' })()')})(this.getFormData(), this.getPageData(), this);
 
-							if(typeof index =='number'){
-								index=parseInt(index);
-								nextNode=data.nodes[index];
-							}
+							var handleIndex=(index)=>{
 
-							if(typeof index=='string'){
+								if(typeof index =='number'){
+									index=parseInt(index);
+									nextNode=data.nodes[index];
+								}
 
-								nextNode=this._findNextNodePrefix(index, data)||this._findNode(index);
-								//throw 'Not implemented: Navigation to node uuid';
-							}
+								if(typeof index=='string'){
 
-							if(typeof nextNode=='string'){
-								nextNode=this._findNode(nextNode);
-								//throw 'Not implemented: Navigation to node uuid';
-							}
+									nextNode=this._findNextNodePrefix(index, data)||this._findNode(index);
+									//throw 'Not implemented: Navigation to node uuid';
+								}
 
-							this._renderNode(nextNode);
+								if(typeof nextNode=='string'){
+									nextNode=this._findNode(nextNode);
+									//throw 'Not implemented: Navigation to node uuid';
+								}
+
+
+								if(index instanceof Promise){
+									index.then(handleIndex);
+									return;
+								}
+
+								this._renderNode(nextNode);
+
+							};
+
+							handleIndex(index);
 						}
 					}
 				});
@@ -226,21 +342,72 @@ export class SurveyRenderer extends EventEmitter{
 
 	_renderSetNavigation(items, i, container, complete){
 
+		this._disableForward=false;
+		delete this._validators;
+		delete this._transforms;
+
 		container=container||this._element;
 
 		var set=container.appendChild(new Element('div'));
 
-		this._renderSet(items[i], set);
+		this._renderSet(items[i], set).then(()=>{
 
 
+	
 
-		var nav=set.appendChild(new Element('nav'));
+
+			var nav=set.appendChild(new Element('nav'));
 
 
-		if(i>0){
+			if(i>0){
 
-			nav.appendChild(new Element('button', {
-				html:"Back",
+				nav.appendChild(new Element('button', {
+					html:"Back",
+					events:{
+						click:(e)=>{
+
+							this._update();
+
+							e.stopPropagation();
+							set.parentNode.removeChild(set);
+							this._renderSetNavigation(items, --i, container, complete);
+						}
+					}
+				}))
+			}
+
+			if(i==items.length-1){
+
+				if(typeof complete==='function'){
+					complete=complete();
+				}
+
+				complete=complete||new Element('button', {
+					html:"Complete",
+					events:{
+						click:(e)=>{
+
+							this._update();
+
+							e.stopPropagation();
+							set.parentNode.removeChild(set);
+							this.emit('complete');
+							container.appendChild(new Element('h3', {
+								html:"Complete!"
+							}))
+						}
+					}
+				});
+
+				
+				this._setForwardBtn(complete);
+				nav.appendChild(complete);
+
+				return;
+			}
+
+			this._setForwardBtn(nav.appendChild(new Element('button', {
+				html:"Next",
 				events:{
 					click:(e)=>{
 
@@ -248,55 +415,12 @@ export class SurveyRenderer extends EventEmitter{
 
 						e.stopPropagation();
 						set.parentNode.removeChild(set);
-						this._renderSetNavigation(items, --i, container, complete);
+						this._renderSetNavigation(items, ++i, container, complete);
 					}
 				}
-			}))
-		}
+			})));
 
-		if(i==items.length-1){
-
-			if(typeof complete==='function'){
-				complete=complete();
-			}
-
-			complete=complete||new Element('button', {
-				html:"Complete",
-				events:{
-					click:(e)=>{
-
-						this._update();
-
-						e.stopPropagation();
-						set.parentNode.removeChild(set);
-						this.emit('complete');
-						container.appendChild(new Element('h3', {
-							html:"Complete!"
-						}))
-					}
-				}
-			});
-
-			
-
-			nav.appendChild(complete);
-
-			return;
-		}
-
-		nav.appendChild(new Element('button', {
-			html:"Next",
-			events:{
-				click:(e)=>{
-
-					this._update();
-
-					e.stopPropagation();
-					set.parentNode.removeChild(set);
-					this._renderSetNavigation(items, ++i, container, complete);
-				}
-			}
-		}))
+		})
 
 	}
 
@@ -338,11 +462,40 @@ export class SurveyRenderer extends EventEmitter{
 
 	}
 
+
+	appendFormValue(name, value){
+
+		value=JSON.parse(JSON.stringify(value));
+		
+		this._currentFormData()[name]=this._currentFormData()[name]||[];
+		this._currentFormData()[name].push(value);
+
+
+		this.emit('update');
+
+	}
+
 	updateFormValue(name, value){
 
 		value=JSON.parse(JSON.stringify(value));
 
 		this._currentFormData()[name]=value;
+
+		this.emit('update');
+
+	}
+
+
+	updateFormValues(obj){
+
+		obj=JSON.parse(JSON.stringify(obj));
+
+
+		Object.keys(obj).forEach((name)=>{
+			this._currentFormData()[name]=obj[name];
+		});
+
+		
 
 		this.emit('update');
 
@@ -415,36 +568,75 @@ export class SurveyRenderer extends EventEmitter{
 				}));
 		}
 
-		data.items.forEach((item)=>{
-
-			this._renderItem(item, container);
-
-		});
+		return this.renderItems(data.items, container).then(()=>{
 
 
-		Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el)=>{
+			Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el)=>{
 
-			if(typeof el.name=='string'&&typeof this._currentFormData()[el.name]!='undefined'){
+				if(typeof el.name=='string'&&typeof this._currentFormData()[el.name]!='undefined'){
 
-				if(el.type==='checkbox'){
-					el.checked=this._currentFormData()[el.name]==='on';
-					return;
+					if(el.type==='checkbox'){
+						el.checked=this._currentFormData()[el.name]==='on';
+						return;
+					}
+
+					el.value=this._currentFormData()[el.name];
 				}
+				
+			});
 
-				el.value=this._currentFormData()[el.name];
-			}
-			
+			this._update();
+			this.emit('renderSet');
+			this.emit('renderPage'); 
+
 		});
 
-		this._update();
-		this.emit('renderSet');
-		this.emit('renderPage'); 
+
+	}
+
+	renderItems(items, container){
+
+
+		var list=items.slice(0);
+
+
+		if(list.length>0){
+
+
+			// var resp=this._renderItem(list.shift(), container);
+
+			// var promise=Promise.resolve();
+			// if(resp instanceof Promise){
+			// 	promise=resp;
+			// }
+
+			return new Promise((resolve)=>{
+
+				resolve(this._renderItem(list.shift(), container));
+
+			}).then(()=>{
+
+				return this.renderItems(list, container);
+
+			});
+
+
+		}
+
+		return Promise.resolve();
+
+		items.forEach((item)=>{
+
+			
+
+		});
+
 
 
 	}
 
 	renderItem(item, container){
-		this._renderItem(item, container);
+		return this._renderItem(item, container);
 	}
 
 	_renderItem(item, container){
@@ -454,8 +646,12 @@ export class SurveyRenderer extends EventEmitter{
 		container=container||this._element;
 
 		if(typeof SurveyRenderer._renderers[item.type]=='function'){
-
-			SurveyRenderer._renderers[item.type](item, container, this);
+			try{
+				return SurveyRenderer._renderers[item.type](item, container, this);
+			}catch(e){
+				console.error(e);
+				this.appendFormValue('errors', e.message);
+			}
 			return;
 
 		}

@@ -19,7 +19,7 @@ import {
 } from 'qrcode';
 
 
-
+import  Schema  from 'async-validator';
 
 const labelTemplate=(label, renderer)=>{
 	return Twig.twig({
@@ -228,34 +228,50 @@ SurveyRenderer.addItem('script', (item, container, renderer) => {
 
 	if(script){
 
-		var resp=((formData, renderer)=>{ return eval('(function(){ '+script+' })()')})( renderer.getFormData(), renderer);
+		var resp=((formData, pageData, renderer)=>{ return eval('(function(){ '+script+' })()')})( renderer.getFormData(), renderer.getPageData(), renderer);
 
 
-		if(!resp){
-			return;
+
+		var handleResp=(resp)=>{
+
+			if(!resp){
+				return;
+			}
+
+			if(typeof resp.type=='string'){
+				renderer.renderItem(resp, container);
+			}
+
+			if(Array.isArray(resp)){
+				resp.forEach((item)=>{
+					renderer.renderItem(item, container);
+				});
+			}
+
+
+			if(resp instanceof HTMLElement){
+				container.appendChild(resp);
+			}
+
+			if(typeof resp=='string'){
+				container.appendChild(new Element('span',{
+					html:labelTemplate(resp, renderer)
+				}));
+			}
+
+
+
+			if(resp instanceof Promise){
+
+				return resp.then((resp)=>{
+					return handleResp(resp);
+				});
+
+			}
+
 		}
 
-		if(typeof resp.type=='string'){
-			renderer.renderItem(resp, container);
-		}
-
-		if(Array.isArray(resp)){
-			resp.forEach((item)=>{
-				renderer.renderItem(item, container);
-			});
-		}
-
-
-		if(resp instanceof HTMLElement){
-			container.appendChild(resp);
-		}
-
-		if(typeof resp=='string'){
-			container.appendChild(new Element('span',{
-				html:labelTemplate(resp, renderer)
-			}));
-		}
-
+		return handleResp(resp);
 
 
 	}
@@ -290,6 +306,76 @@ SurveyRenderer.addItem('label', (item, container, renderer) => {
 
 
 });
+
+
+SurveyRenderer.addItem('validation', (item, container, renderer) => {
+
+
+	var data=JSON.parse(item.data);
+	if(data){
+
+		var validationEl=container.appendChild(new Element('span', {"class":"validation"}));
+
+		const validator = new Schema(data);
+
+		renderer.addValidator((formData, pageData)=>{
+
+			return validator.validate(pageData).then(()=>{
+
+
+				Object.keys(data).forEach((field)=>{
+					renderer.getInput(field).removeAttribute('data-validation-error');
+				});
+
+
+			}).catch(({ errors, fields })=>{
+
+				Object.keys(data).forEach((field)=>{
+					renderer.getInput(field).removeAttribute('data-validation-error');
+				});
+				
+				Object.keys(fields).forEach((field ,i)=>{
+					renderer.getInput(field).setAttribute('data-validation-error',errors[i].message);
+				});
+
+				throw {errors:errors, fields:fields};
+
+			});
+
+		})
+
+	}
+
+
+});
+
+
+SurveyRenderer.addItem('transform', (item, container, renderer) => {
+
+
+	var script=item.script;
+
+	if(script){
+
+
+		renderer.addTransform(()=>{
+
+			var resp=((pageData, renderer)=>{ return eval('(function(){ '+script+' })()')})( renderer.getPageData(), renderer);
+
+			if(!resp){
+				return;
+			}
+
+			renderer.updateFormValues(resp);
+
+		});
+
+	}
+
+
+});
+
+
 
 SurveyRenderer.addItem('fieldset', (item, container, renderer) => {
 

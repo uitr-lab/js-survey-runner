@@ -22,6 +22,7 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
+    "async-validator": "^4.2.5",
     "events": "^3.3.0",
     "marked": "^4.2.5",
     "path-browserify": "^1.0.1",
