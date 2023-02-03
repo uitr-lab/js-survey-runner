@@ -44,6 +44,22 @@ export class SurveyRenderer extends EventEmitter{
 
 	}
 
+	addLocalizationsMap(map){
+
+		this._map=map;
+
+	}
+
+	useLocalStorageLocalizationsMap(name){
+
+
+	}
+
+	localize(label, from, to){
+
+
+	}
+
 	render(data){
 
 
