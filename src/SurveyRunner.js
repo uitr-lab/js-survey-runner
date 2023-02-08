@@ -46,18 +46,46 @@ export class SurveyRenderer extends EventEmitter{
 
 	addLocalizationsMap(map){
 
+		this._lang='en';
 		this._map=map;
 
 	}
 
 	useLocalStorageLocalizationsMap(name){
 
+		var storedData = localStorage.getItem(name);
+		if (storedData) {
+			storedData=JSON.parse(storedData);
+			this.addLocalizationsMap(storedData);
+		}
 
 	}
 
 	localize(label, from, to){
 
 
+		from=from||'en';
+		to=to||'en';
+
+		if(from===to){
+			return label;
+		}
+
+		var fromMap=this._map[from||'en'];
+
+		var results=Object.keys(this._map[from||'en']).filter((key)=>{
+			return fromMap[key]===label;
+		});
+
+		if(results.length){
+			var toMap=this._map[to||'fr'];
+			if(toMap&&typeof toMap[results[0]]==='string'){
+				return toMap[results[0]];
+			}
+		}
+
+
+		return label;
 	}
 
 	render(data){
@@ -312,7 +340,7 @@ export class SurveyRenderer extends EventEmitter{
 							
 							var nextNode=data.nodes[0];
 
-							var index=((formData, pageData, renderer)=>{ return eval('(function(){ '+data.navigationLogic+' })()')})(this.getFormData(), this.getPageData(), this);
+							var index=((formData, pageData, renderer)=>{ return eval('(function(){ '+"\n\n"+data.navigationLogic+"\n\n"+' })()')})(this.getFormData(), this.getPageData(), this);
 
 							var handleIndex=(index)=>{
 
@@ -478,6 +506,14 @@ export class SurveyRenderer extends EventEmitter{
 
 	}
 
+
+	unsetFormValue(name){
+
+	
+		delete this._formData[name];
+		this.emit('update');
+
+	}
 
 	appendFormValue(name, value){
 
@@ -647,6 +683,27 @@ export class SurveyRenderer extends EventEmitter{
 
 		});
 
+
+
+	}
+
+	withVariables(vars, cb){
+
+		var original={}
+		Object.keys(vars).forEach((k)=>{
+			original[k]=this._formData[k];
+			this._formData[k]=vars[k];
+		});
+
+		cb();
+
+		Object.keys(vars).forEach((k)=>{
+			if(typeof original[k]=='undefined'){
+				delete this._formData[k];
+				return;
+			}
+			this._formData[k]=original[k];
+		});
 
 
 	}

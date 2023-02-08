@@ -19,9 +19,18 @@ import {
 } from 'qrcode';
 
 
+import {
+	Options
+} from './helpers/Options.js'
+
+
 import  Schema  from 'async-validator';
 
 const labelTemplate=(label, renderer)=>{
+
+
+	label=renderer.localize(label);
+
 	return Twig.twig({
 	    data: label
 	}).render(renderer.getFormData()||{});
@@ -114,78 +123,86 @@ SurveyRenderer.addItem('radio', (item, container, renderer) => {
 
 
 
-	var values=(item.values||['a', 'b', 'c']);
-
-	var labels=null;
-
-	if(typeof values=='string'){
-
-		if(values[0]=='['){
-			
-			values=JSON.parse(values);
-		
-		}else if(values[0]=='{'){
-			
-			var obj=JSON.parse(values);
-			values=Object.keys(obj);
-			labels=[];
-			values.forEach((v)=>{
-				labels.push(obj[v]);
-			});
-
-
-		}else{
-
-			values=values.split(',').map((v)=>{
-				return v.trim();
-			});
-
-
-		}
-
-	}
-
-	labels=labels||(item.labels||values);
-
-
-	if(typeof labels=='string'){
-
-		if(labels[0]=='['){
-			
-			labels=JSON.parse(labels);
-		
-		}else{
-
-			labels=labels.split(',').map((l)=>{
-				return l.trim();
-			});
-
-
-		}
-
-	}
-
-
-	values.forEach((v, index)=>{
-
-
-
+	(new Options()).addStringFormatter((s)=>{ return labelTemplate(s, renderer); }).parseValueList(item, (option)=>{
 
 		var radio = container.appendChild(new Element('label', {
-			"for":v,
-			html:labelTemplate(labels[index], renderer)
+			"for":option.value,
+			html:labelTemplate(option.label, renderer)
 		}));
 
 		 radio.appendChild(new Element('input',{
-				type:'radio',
-				value:v,
-				name:labelTemplate(item.fieldName, renderer)
-			}))
+			type:'radio',
+			value:option.value,
+			name:labelTemplate(item.fieldName, renderer)
+		}))
 
 	})
 
 
 });
+
+
+SurveyRenderer.addItem('option', (item, container, renderer) => {
+
+
+	container=container.appendChild(new Element('span', {
+		"class":"option"
+	}));
+
+	if(item.label){
+
+		container.appendChild(new Element('label', {
+			html: labelTemplate(item.label, renderer)
+		}));
+
+	}
+
+	container=container.appendChild(new Element('select',{
+		"name":labelTemplate(item.fieldName, renderer)
+	}));
+
+
+	container.appendChild(new Element('option',{
+		disabled:true,
+		selected:true,
+		html:labelTemplate('select an option', renderer)
+	}));
+
+	(new Options()).addStringFormatter((s)=>{ return labelTemplate(s, renderer); }).parseValueList(item, (option)=>{
+
+		container.appendChild(new Element('option',{
+			value:option.value,
+			html:labelTemplate(option.label, renderer)
+		}))
+
+	});
+
+
+});
+
+
+// SurveyRenderer.addItem('fieldtree', (item, container, renderer) => {
+
+
+
+// 	var data=JSON.parse(item.data);
+// 	if(!data){
+// 		throw 'Invalid JSON';
+// 	}
+
+
+// 	container=container.appendChild(new Element('span', {
+// 		"class":"fieldtree"
+// 	}));
+
+
+// 	renderer.renderItem(data.field, container);
+
+
+	
+
+
+// });
 
 SurveyRenderer.addItem('defaultData', (item, container, renderer) => {
 
@@ -228,7 +245,7 @@ SurveyRenderer.addItem('script', (item, container, renderer) => {
 
 	if(script){
 
-		var resp=((formData, pageData, renderer)=>{ return eval('(function(){ '+script+' })()')})( renderer.getFormData(), renderer.getPageData(), renderer);
+		var resp=((formData, pageData, renderer)=>{ return eval('(function(){ '+"\n"+script+"\n"+' })()')})( renderer.getFormData(), renderer.getPageData(), renderer);
 
 
 
@@ -296,6 +313,22 @@ SurveyRenderer.addItem('html', (item, container, renderer) => {
 
 });
 
+
+SurveyRenderer.addItem('style', (item, container, renderer) => {
+
+
+	var style=item.style;
+
+	if(style){
+
+		container.appendChild(new Element('style',{
+			html:labelTemplate(style, renderer)
+		}));
+
+	}
+
+
+});
 
 SurveyRenderer.addItem('label', (item, container, renderer) => {
 
@@ -376,6 +409,41 @@ SurveyRenderer.addItem('transform', (item, container, renderer) => {
 });
 
 
+SurveyRenderer.addItem('template', (item, container, renderer) => {
+
+
+	var variables=JSON.parse(item.variables||'{}')||{};
+
+
+	SurveyRenderer.addItem('template.'+item.template, (instance, container, renderer) => {
+
+
+		var instanceVariables=JSON.parse(instance.variables||'{}')||{};
+
+		var vars={};
+		
+		Object.keys(variables).forEach((k)=>{
+			vars[k]=variables[k];
+		})
+
+		Object.keys(instanceVariables).forEach((k)=>{
+			vars[k]=instanceVariables[k];
+		});
+
+
+
+		return renderer.withVariables(vars, ()=>{
+			return renderer.renderItem({
+				type:"fieldset",
+				items:item.items,
+				classNames:item.classNames
+			}, container);
+		});
+		
+
+	});
+
+});
 
 SurveyRenderer.addItem('fieldset', (item, container, renderer) => {
 
@@ -389,6 +457,43 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer) => {
 			html:labelTemplate(item.legend, renderer)
 		}));
 	}
+
+
+
+	if(item.conditionScript){
+
+		var script=labelTemplate(item.conditionScript, renderer);
+
+		var checkCondition=()=>{
+
+			var result=((formData, pageData, renderer)=>{ return eval('(function(){ '+"\n"+script+"\n"+' })()')})( renderer.getFormData(), renderer.getPageData(), renderer);
+
+			if(result===false){
+				fieldset.style.cssText='display:none;';
+				return;
+			}
+
+
+
+
+			fieldset.style.cssText='';
+			
+
+		}
+
+		checkCondition();
+		renderer.on('update', checkCondition);
+
+	}
+
+
+	if(item.classNames&&item.classNames.length>0){
+		item.classNames.split(' ').filter((c)=>{ return c&&c.length>0}).forEach((c)=>{
+			fieldset.classList.add(c);
+		});
+	}
+
+
 
 	(item.items||[]).forEach((item)=>{
 
