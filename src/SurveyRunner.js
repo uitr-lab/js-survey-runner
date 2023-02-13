@@ -61,6 +61,27 @@ export class SurveyRenderer extends EventEmitter{
 
 	}
 
+
+	_setSourceFile(file){
+		this._sourceFile=file;
+	}
+
+	_setSourceBase(base){
+		this._sourceBase=base;
+	}
+
+
+	static addFormatter(name, fn){
+
+		SurveyRenderer._formatters=SurveyRenderer._formatters||{};
+		SurveyRenderer._formatters[name]=fn;
+
+	}
+
+	getFormatter(name){
+		return (SurveyRenderer._formatters||{})[name]||(()=>{});
+	}
+
 	localize(label, from, to){
 
 
@@ -278,6 +299,7 @@ export class SurveyRenderer extends EventEmitter{
 	}
 
 	_findNextNodePrefix(uuid, data){
+
 		var matches=data.nodes.filter((node)=>{
 			return node.uuid===uuid;
 		})
@@ -298,16 +320,21 @@ export class SurveyRenderer extends EventEmitter{
 		}
 
 		return match;
+
 	}
 
 	_resetContext(){
+
 		this.useFormData(); //reset any loop data offsets
 		this._disableForward=false;
 		delete this._validators;
 		delete this._transforms;
+
 	}
 
 	_renderNode(data, container){
+
+		this._setSourceBase(data.name)
 
 		this._resetContext()
 
@@ -608,6 +635,17 @@ export class SurveyRenderer extends EventEmitter{
 
 	}
 
+
+	getSourceUrl(){
+
+
+		var path=(this._sourceBase||"page")+"/"+(this._sourceFile)+".js?"
+		path=path.split(' ').join('');
+
+		return '//# sourceURL=survey-runner://survey-items/scripts/'+path
+
+	}
+
 	_renderSet(data, container){
 
 
@@ -720,6 +758,8 @@ export class SurveyRenderer extends EventEmitter{
 
 		if(typeof SurveyRenderer._renderers[item.type]=='function'){
 			try{
+
+				this._setSourceFile(item.type);
 				return SurveyRenderer._renderers[item.type](item, container, this);
 			}catch(e){
 				console.error(e);

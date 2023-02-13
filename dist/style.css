@@ -24,7 +24,7 @@ form.survey-view label>input[type="text"] {
 }
 
 
-form.survey-view nav button {
+form.survey-view nav button, form.survey-view .nav button {
     background: mediumaquamarine;
     padding: 10px 20px;
     border: none;
@@ -38,6 +38,11 @@ form.survey-view nav button {
 form.survey-view nav {
     text-align: right;
     margin: 50px;
+}
+
+
+form.survey-view .markdown img {
+    max-width: 100%;
 }
 
 

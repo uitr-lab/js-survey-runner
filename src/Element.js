@@ -51,3 +51,5 @@ export class Element {
 
 
 }
+
+window.Element=Element;

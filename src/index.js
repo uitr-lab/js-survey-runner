@@ -47,6 +47,7 @@ SurveyRenderer.addItem('markdown', (item, container, renderer) => {
 
 	var content = marked.parse(markdown);
 	container.appendChild(new Element('span', {
+		"class":"markdown",
 		html: content
 	}));
 
@@ -60,7 +61,7 @@ SurveyRenderer.addItem('textfield', (item, container, renderer) => {
 
 	if (item.label) {
 		label = container.appendChild(new Element('label', {
-			html: labelTemplate(item.label, renderer)
+			html: '<span>'+labelTemplate(item.label, renderer)+'</span>'
 		}));
 
 	}
@@ -72,10 +73,22 @@ SurveyRenderer.addItem('textfield', (item, container, renderer) => {
 		name: labelTemplate(item.fieldName, renderer)
 	}));
 
+
+	if(item.format){
+		renderer.getFormatter(item.format)(input, item);
+	}
+
 	if (item.placeholder) {
 		input.setAttribute('placeholder', item.placeholder);
 	}
 
+
+});
+
+
+SurveyRenderer.addFormatter('time', (input, item)=>{
+
+	input.type='time'
 
 });
 
@@ -245,7 +258,9 @@ SurveyRenderer.addItem('script', (item, container, renderer) => {
 
 	if(script){
 
-		var resp=((formData, pageData, renderer)=>{ return eval('(function(){ '+"\n"+script+"\n"+' })()')})( renderer.getFormData(), renderer.getPageData(), renderer);
+		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
+
+		var resp=((formData, pageData, renderer)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer);
 
 
 
@@ -388,12 +403,15 @@ SurveyRenderer.addItem('transform', (item, container, renderer) => {
 
 	var script=item.script;
 
+
 	if(script){
+
+		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
 
 
 		renderer.addTransform(()=>{
 
-			var resp=((pageData, renderer)=>{ return eval('(function(){ '+script+' })()')})( renderer.getPageData(), renderer);
+			var resp=((pageData, renderer)=>{ return eval(script)})( renderer.getPageData(), renderer);
 
 			if(!resp){
 				return;
@@ -412,13 +430,13 @@ SurveyRenderer.addItem('transform', (item, container, renderer) => {
 SurveyRenderer.addItem('template', (item, container, renderer) => {
 
 
-	var variables=JSON.parse(item.variables||'{}')||{};
+	var variables=JSON.parse(labelTemplate(item.variables||'{}', renderer))||{};
 
 
 	SurveyRenderer.addItem('template.'+item.template, (instance, container, renderer) => {
 
 
-		var instanceVariables=JSON.parse(instance.variables||'{}')||{};
+		var instanceVariables=JSON.parse(labelTemplate(instance.variables||'{}', renderer))||{};
 
 		var vars={};
 		
@@ -445,6 +463,47 @@ SurveyRenderer.addItem('template', (item, container, renderer) => {
 
 });
 
+
+SurveyRenderer.addItem('custom', (item, container, renderer) => {
+
+
+	var variables=JSON.parse(labelTemplate(item.variables||'{}', renderer))||{};
+	var vars={};
+	
+	Object.keys(variables).forEach((k)=>{
+		vars[k]=variables[k];
+	})
+
+
+
+
+	var defaultRenderFn = (el)=>{  
+
+		renderer.withVariables(vars, ()=>{
+			return renderer.renderItem({
+				type:"fieldset",
+				items:item.items,
+				classNames:item.classNames
+			}, el||container);
+		});
+
+	};
+
+
+	var script=item.renderScript;
+
+	if(script){
+
+		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
+
+		var resp=((render, container, formData, pageData, renderer)=>{ return eval(script)})(defaultRenderFn, container, renderer.getFormData(), renderer.getPageData(), renderer);
+
+
+	}
+
+
+});
+
 SurveyRenderer.addItem('fieldset', (item, container, renderer) => {
 
 
@@ -464,9 +523,11 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer) => {
 
 		var script=labelTemplate(item.conditionScript, renderer);
 
+		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
+
 		var checkCondition=()=>{
 
-			var result=((formData, pageData, renderer)=>{ return eval('(function(){ '+"\n"+script+"\n"+' })()')})( renderer.getFormData(), renderer.getPageData(), renderer);
+			var result=((formData, pageData, renderer)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer);
 
 			if(result===false){
 				fieldset.style.cssText='display:none;';
