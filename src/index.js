@@ -59,8 +59,11 @@ SurveyRenderer.addItem('textfield', (item, container, renderer) => {
 
 	var label = null;
 
+	var fieldName=labelTemplate(item.fieldName, renderer);
+
 	if (item.label) {
 		label = container.appendChild(new Element('label', {
+			for: fieldName,
 			html: '<span>'+labelTemplate(item.label, renderer)+'</span>'
 		}));
 
@@ -70,7 +73,7 @@ SurveyRenderer.addItem('textfield', (item, container, renderer) => {
 
 	var input = (label || container).appendChild(new Element('input', {
 		type: "text",
-		name: labelTemplate(item.fieldName, renderer)
+		name: fieldName
 	}));
 
 
@@ -92,13 +95,21 @@ SurveyRenderer.addFormatter('time', (input, item)=>{
 
 });
 
+SurveyRenderer.addFormatter('password', (input, item)=>{
+
+	input.type='password'
+
+});
+
 
 SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
 
+	var fieldName=labelTemplate(item.fieldName, renderer);
 
 	if(item.label){
 
 		container=container.appendChild(new Element('label', {
+			for: fieldName,
 			html: labelTemplate(item.label, renderer)
 		}));
 
@@ -107,7 +118,7 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
 	var checkbox=container.appendChild(new Element('input', {
 		type:"checkbox",
 		checked:!!item.checked,
-		name:labelTemplate(item.fieldName, renderer)
+		name:fieldName
 	}));
 
 	checkbox.addEventListener('change',()=>{
@@ -126,9 +137,13 @@ SurveyRenderer.addItem('radio', (item, container, renderer) => {
 		"class":"radio"
 	}));
 
+
+	var fieldName=labelTemplate(item.fieldName, renderer);
+
 	if(item.label){
 
 		container.appendChild(new Element('label', {
+			for:fieldName,
 			html: labelTemplate(item.label, renderer)
 		}));
 
@@ -146,7 +161,7 @@ SurveyRenderer.addItem('radio', (item, container, renderer) => {
 		 radio.appendChild(new Element('input',{
 			type:'radio',
 			value:option.value,
-			name:labelTemplate(item.fieldName, renderer)
+			name: fieldName
 		}))
 
 	})
@@ -158,7 +173,10 @@ SurveyRenderer.addItem('radio', (item, container, renderer) => {
 SurveyRenderer.addItem('option', (item, container, renderer) => {
 
 
+	var fieldName=labelTemplate(item.fieldName, renderer);
+
 	container=container.appendChild(new Element('span', {
+		for:fieldName,
 		"class":"option"
 	}));
 
@@ -171,7 +189,7 @@ SurveyRenderer.addItem('option', (item, container, renderer) => {
 	}
 
 	container=container.appendChild(new Element('select',{
-		"name":labelTemplate(item.fieldName, renderer)
+		"name":fieldName
 	}));
 
 

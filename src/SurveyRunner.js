@@ -109,15 +109,41 @@ export class SurveyRenderer extends EventEmitter{
 		return label;
 	}
 
-	render(data){
+	render(definition, data){
 
 
-		this._data=data;
+		if(typeof definition=='string'){
+			fetch(definition, {
+			    method: 'GET',
+			    headers: {
+			        'Accept': 'application/json',
+			    },
+			    cache: "no-store"
+			})
+			.then(response => response.json())
+		   	.then(definition => {
+		   		this._render(definition, data);
+		   	});
 
-		this._formData={}
+		   	this._container=new Element('div');
+			return this._container;
+		}
 
 		this._container=new Element('div');
+		this._render(definition, data);
+		return this._container;
 
+	}
+
+	_render(definition, data){
+
+
+		this._data=definition;
+		this._formData={}
+
+		if(data){
+			this.setFormData(data);
+		}
 
 		var form= this._container.appendChild(new Element('form', {
 			"class":"survey-view"
@@ -139,18 +165,18 @@ export class SurveyRenderer extends EventEmitter{
 
 		}
 
-		if(data.type=='set'&&data.items){
+		if(definition.type=='set'&&definition.items){
 			form.classList.add('set-view');
-			this._renderSet(data);
+			this._renderSet(definition);
 
 		}
 
 
 
 
-		if(data.type=='section'&&data.items){
+		if(definition.type=='section'&&definition.items){
 
-			this._renderNode(data);
+			this._renderNode(definition);
 		}
 
 
@@ -160,11 +186,6 @@ export class SurveyRenderer extends EventEmitter{
 			this._update();
 			this._validate();
 		});
-
-
-
-		return  this._container;
-
 
 	}
 	_setForwardBtn(btn){
@@ -502,6 +523,30 @@ export class SurveyRenderer extends EventEmitter{
 	 */
 	getFormData(){
 		return JSON.parse(JSON.stringify(this._formData));
+	}
+
+
+
+	async postFormData(url){
+
+
+		const response = await fetch(url, {
+		    method: "POST", // *GET, POST, PUT, DELETE, etc.
+		    mode: "same-origin", // no-cors, *cors, same-origin
+		    cache: "no-store", // *default, no-cache, reload, force-cache, only-if-cached
+		    credentials: "same-origin", // include, *same-origin, omit
+		    headers: {
+		      "Content-Type": "application/json",
+		      // 'Content-Type': 'application/x-www-form-urlencoded',
+		    },
+		    redirect: "follow", // manual, *follow, error
+		    referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+		    body: JSON.stringify(this.getFormData()), // body data type must match "Content-Type" header
+		  });
+		  
+		return response.json(); // parses JSON response into native JavaScript objects
+		
+
 	}
 
 
