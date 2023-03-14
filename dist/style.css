@@ -54,6 +54,13 @@ form.survey-view fieldset {
 }
 
 
+form.survey-view fieldset>fieldset {
+    padding: unset;
+    border: unset;
+    background: unset;
+    margin: unset;
+}
+
 
 form.survey-view h2.set-label {
     display: none;

@@ -38,7 +38,7 @@ const labelTemplate=(label, renderer)=>{
 
 
 
-SurveyRenderer.addItem('markdown', (item, container, renderer) => {
+SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
 
 
 	
@@ -55,7 +55,7 @@ SurveyRenderer.addItem('markdown', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('textfield', (item, container, renderer) => {
+SurveyRenderer.addItem('textfield', (item, container, renderer, page) => {
 
 	var label = null;
 
@@ -102,7 +102,7 @@ SurveyRenderer.addFormatter('password', (input, item)=>{
 });
 
 
-SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
+SurveyRenderer.addItem('checkbox', (item, container, renderer, page) => {
 
 	var fieldName=labelTemplate(item.fieldName, renderer);
 
@@ -130,7 +130,7 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer) => {
 
 });
 
-SurveyRenderer.addItem('radio', (item, container, renderer) => {
+SurveyRenderer.addItem('radio', (item, container, renderer, page) => {
 
 
 	container=container.appendChild(new Element('span', {
@@ -170,7 +170,7 @@ SurveyRenderer.addItem('radio', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('option', (item, container, renderer) => {
+SurveyRenderer.addItem('option', (item, container, renderer, page) => {
 
 
 	var fieldName=labelTemplate(item.fieldName, renderer);
@@ -235,7 +235,7 @@ SurveyRenderer.addItem('option', (item, container, renderer) => {
 
 // });
 
-SurveyRenderer.addItem('defaultData', (item, container, renderer) => {
+SurveyRenderer.addItem('defaultData', (item, container, renderer, page) => {
 
 
 	var data=JSON.parse(item.data);
@@ -252,7 +252,7 @@ SurveyRenderer.addItem('defaultData', (item, container, renderer) => {
 
 });
 
-SurveyRenderer.addItem('qrcode', (item, container, renderer) => {
+SurveyRenderer.addItem('qrcode', (item, container, renderer, page) => {
 
 
 	var data=item.data;
@@ -269,7 +269,7 @@ SurveyRenderer.addItem('qrcode', (item, container, renderer) => {
 
 });
 
-SurveyRenderer.addItem('script', (item, container, renderer) => {
+SurveyRenderer.addItem('script', (item, container, renderer, page) => {
 
 
 	var script=item.script;
@@ -278,7 +278,7 @@ SurveyRenderer.addItem('script', (item, container, renderer) => {
 
 		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
 
-		var resp=((formData, pageData, renderer)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer);
+		var resp=((formData, pageData, renderer, page)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer, page);
 
 
 
@@ -330,7 +330,7 @@ SurveyRenderer.addItem('script', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('html', (item, container, renderer) => {
+SurveyRenderer.addItem('html', (item, container, renderer, page) => {
 
 
 	var html=item.html;
@@ -347,7 +347,7 @@ SurveyRenderer.addItem('html', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('style', (item, container, renderer) => {
+SurveyRenderer.addItem('style', (item, container, renderer, page) => {
 
 
 	var style=item.style;
@@ -363,7 +363,7 @@ SurveyRenderer.addItem('style', (item, container, renderer) => {
 
 });
 
-SurveyRenderer.addItem('label', (item, container, renderer) => {
+SurveyRenderer.addItem('label', (item, container, renderer, page) => {
 
 
 	container.appendChild(new Element('label', {
@@ -374,7 +374,7 @@ SurveyRenderer.addItem('label', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('validation', (item, container, renderer) => {
+SurveyRenderer.addItem('validation', (item, container, renderer, page) => {
 
 
 	var data=JSON.parse(item.data);
@@ -416,7 +416,7 @@ SurveyRenderer.addItem('validation', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('transform', (item, container, renderer) => {
+SurveyRenderer.addItem('transform', (item, container, renderer, page) => {
 
 
 	var script=item.script;
@@ -429,7 +429,7 @@ SurveyRenderer.addItem('transform', (item, container, renderer) => {
 
 		renderer.addTransform(()=>{
 
-			var resp=((pageData, renderer)=>{ return eval(script)})( renderer.getPageData(), renderer);
+			var resp=((pageData, renderer, page)=>{ return eval(script)})( renderer.getPageData(), renderer, page);
 
 			if(!resp){
 				return;
@@ -445,13 +445,13 @@ SurveyRenderer.addItem('transform', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('template', (item, container, renderer) => {
+SurveyRenderer.addItem('template', (item, container, renderer, page) => {
 
 
 	var variables=JSON.parse(labelTemplate(item.variables||'{}', renderer))||{};
 
 
-	SurveyRenderer.addItem('template.'+item.template, (instance, container, renderer) => {
+	SurveyRenderer.addItem('template.'+item.template, (instance, container, renderer, page) => {
 
 
 		var instanceVariables=JSON.parse(labelTemplate(instance.variables||'{}', renderer))||{};
@@ -482,7 +482,7 @@ SurveyRenderer.addItem('template', (item, container, renderer) => {
 });
 
 
-SurveyRenderer.addItem('custom', (item, container, renderer) => {
+SurveyRenderer.addItem('custom', (item, container, renderer, page) => {
 
 
 	var variables=JSON.parse(labelTemplate(item.variables||'{}', renderer))||{};
@@ -503,7 +503,12 @@ SurveyRenderer.addItem('custom', (item, container, renderer) => {
 				items:item.items,
 				classNames:item.classNames
 			}, el||container);
+
+			renderer.needsUpdate();
+
 		});
+
+
 
 	};
 
@@ -514,7 +519,7 @@ SurveyRenderer.addItem('custom', (item, container, renderer) => {
 
 		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
 
-		var resp=((render, container, formData, pageData, renderer)=>{ return eval(script)})(defaultRenderFn, container, renderer.getFormData(), renderer.getPageData(), renderer);
+		var resp=((render, container, formData, pageData, renderer, page)=>{ return eval(script)})(defaultRenderFn, container, renderer.getFormData(), renderer.getPageData(), renderer, page);
 
 
 	}
@@ -522,7 +527,7 @@ SurveyRenderer.addItem('custom', (item, container, renderer) => {
 
 });
 
-SurveyRenderer.addItem('fieldset', (item, container, renderer) => {
+SurveyRenderer.addItem('fieldset', (item, container, renderer, page) => {
 
 
 	var fieldset=container.appendChild(new Element('fieldset', {
@@ -545,7 +550,7 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer) => {
 
 		var checkCondition=()=>{
 
-			var result=((formData, pageData, renderer)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer);
+			var result=((formData, pageData, renderer, page)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer);
 
 			if(result===false){
 				fieldset.style.cssText='display:none;';
