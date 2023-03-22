@@ -11,9 +11,12 @@ form.survey-view,  pre.survey-data{
 
 
 
-form.survey-view label {
+form.survey-view label, form.survey-view .option {
     display: block;
-    margin: 5px;
+}
+
+form.survey-view .option>label {
+    display: inline;
 }
 
 form.survey-view label>input[type="text"] {
@@ -21,6 +24,13 @@ form.survey-view label>input[type="text"] {
     min-height: 22px;
     min-width:350px;
     padding: 3px 7px;
+}
+
+form.survey-view label>input, form.survey-view .option>select {
+    margin-left: 10px;
+    min-height: 22px;
+    padding: 3px 7px;
+    box-sizing: content-box;
 }
 
 
@@ -76,10 +86,8 @@ form.survey-view h1.node-label, form.survey-view h2.set-label {
 }
 
 
-form.survey-view fieldset label {
-    text-align: right;
+form.survey-view fieldset label, form.survey-view fieldset .option {
     width: 70%;
-    margin: auto;
     margin-bottom: 10px;
     line-height: 30px;
 }
@@ -92,7 +100,9 @@ form.survey-view fieldset {
 
 }
 
-form.survey-view fieldset label:not( :has( input ) ), form.survey-view fieldset label:has( label ) {
+form.survey-view fieldset label:not( :has( input ) ), 
+form.survey-view fieldset label:has( label ) , 
+form.survey-view fieldset label:has( span ) {
     text-align: left;
     font-weight: 600;
 }

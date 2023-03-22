@@ -31,9 +31,14 @@ const labelTemplate=(label, renderer)=>{
 
 	label=renderer.localize(label);
 
-	return Twig.twig({
-	    data: label
-	}).render(renderer.getFormData()||{});
+	try{
+		return Twig.twig({
+			data: label
+		}).render(renderer.getFormData()||{});
+	}catch(e){
+		console.error(e);
+		return label;
+	}
 }
 
 
