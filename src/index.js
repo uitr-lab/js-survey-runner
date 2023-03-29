@@ -90,19 +90,28 @@ SurveyRenderer.addItem('textfield', (item, container, renderer, page) => {
 		input.setAttribute('placeholder', item.placeholder);
 	}
 
-
+	
+	
 });
 
 
 SurveyRenderer.addFormatter('time', (input, item)=>{
-
 	input.type='time'
-
 });
 
 SurveyRenderer.addFormatter('password', (input, item)=>{
-
 	input.type='password'
+});
+
+SurveyRenderer.addFormatter('number', (input, item, min, max)=>{
+	input.type='number';
+
+	if(typeof min=='number'){
+		input.min=min;
+	}
+	if(typeof max=='number'){
+		input.max=max;
+	}
 
 });
 

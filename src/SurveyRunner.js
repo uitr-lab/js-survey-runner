@@ -18,6 +18,11 @@ export class SurveyRenderer extends EventEmitter {
 	constructor() {
 		super();
 
+		this._options={
+			completeLabel:"Complete",
+			completePageHtml:"Complete! Thank you."
+		};
+
 		this.on('renderPage', (page) => {
 			setTimeout(() => {
 				this._container.scrollTo(0, 0);
@@ -30,6 +35,12 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
+
+	setOptions(opt){
+
+		this._options=opt;
+
+	}
 
 	displayInfo() {
 		this._displayInfo = true;
@@ -79,7 +90,26 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 	getFormatter(name) {
-		return (SurveyRenderer._formatters || {})[name] || (() => {});
+		return (...args) => {
+
+			if(name.indexOf('(')>0){
+
+				try{
+					var extraArgs = name.split('(', 2).pop();
+					extraArgs=JSON.parse('['+extraArgs.substring(0, extraArgs.length - 1)+']');
+					args=args.concat(extraArgs);
+				}catch(e){
+					console.error(e);
+				}
+
+			}
+
+			name = name.split('(').shift();
+			
+
+
+			return ((SurveyRenderer._formatters || {})[name] || (() => { })).apply(null, args);
+		}
 	}
 
 	localize(label, from, to) {
@@ -114,12 +144,12 @@ export class SurveyRenderer extends EventEmitter {
 
 		if (typeof definition == 'string') {
 			fetch(definition, {
-					method: 'GET',
-					headers: {
-						'Accept': 'application/json',
-					},
-					cache: "no-store"
-				})
+				method: 'GET',
+				headers: {
+					'Accept': 'application/json',
+				},
+				cache: "no-store"
+			})
 				.then(response => response.json())
 				.then(definition => {
 					this._render(definition, data);
@@ -272,7 +302,7 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	needsUpdate(){
+	needsUpdate() {
 		this._update();
 	}
 
@@ -477,7 +507,7 @@ export class SurveyRenderer extends EventEmitter {
 				}
 
 				complete = complete || new Element('button', {
-					html: "Complete",
+					html: this._options.completeLabel||"Complete",
 					events: {
 						click: (e) => {
 
@@ -487,7 +517,8 @@ export class SurveyRenderer extends EventEmitter {
 							set.parentNode.removeChild(set);
 							this.emit('complete');
 							container.appendChild(new Element('h3', {
-								html: "Complete!"
+								"class":"complete-page",
+								html: this._options.completePageHtml||"Complete! Thank you."
 							}))
 						}
 					}
@@ -562,7 +593,7 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	getPage(){
+	getPage() {
 		return this._pageRenderer;
 	}
 
@@ -573,8 +604,27 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
+	fetchFormValue(name, url) {
+
+		return fetch(url, {
+			mode: "no-cors", // no-cors, *cors, same-origin
+			cache: "no-cache",
+			credentials: "omit",
+		}).then((resp) => {
+
+			return resp.json();
+
+		}).then((json) => {
+
+			this.setFormValue(name, json);
+
+		}).catch(console.error)
+
+	}
+
 
 	setFormValue(name, value) {
+
 
 		value = JSON.parse(JSON.stringify(value));
 
@@ -665,10 +715,24 @@ export class SurveyRenderer extends EventEmitter {
 		delete this._useFormData;
 	}
 
-	useFormDataFieldArray(key, index) {
+	useFormDataFieldArray(key, index, defaultValue) {
+
+		if (typeof defaultValue == 'undefined') {
+			defaultValue = 0;
+		}
+
+		if (typeof index == 'function') {
+
+			try {
+				index = index();
+			} catch (e) {
+				console.error(e);
+			}
+
+		}
 
 		if (typeof index != 'number') {
-			index = 0;
+			index = defaultValue;
 		}
 
 		this._useFormData = this._useFormData || this._formData; //copy reference;
@@ -711,7 +775,7 @@ export class SurveyRenderer extends EventEmitter {
 		}
 
 
-		if(this._pageRenderer){
+		if (this._pageRenderer) {
 			this._pageRenderer.remove();
 		}
 
