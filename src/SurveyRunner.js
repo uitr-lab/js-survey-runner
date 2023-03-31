@@ -604,6 +604,24 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
+	fetchFormTextValue(name, url) {
+
+		return fetch(url, {
+			mode: "no-cors", // no-cors, *cors, same-origin
+			cache: "no-cache",
+			credentials: "omit",
+		}).then((resp) => {
+
+			return resp.text();
+
+		}).then((value) => {
+
+			this.setFormValue(name, value);
+
+		}).catch(console.error)
+
+	}
+
 	fetchFormValue(name, url) {
 
 		return fetch(url, {
@@ -614,9 +632,9 @@ export class SurveyRenderer extends EventEmitter {
 
 			return resp.json();
 
-		}).then((json) => {
+		}).then((value) => {
 
-			this.setFormValue(name, json);
+			this.setFormValue(name, value);
 
 		}).catch(console.error)
 
