@@ -182,11 +182,22 @@ export class SurveyRenderer extends EventEmitter {
 		form.addEventListener('focusin', (e)=>{
 
 			if(typeof e.target.name=='string'){
-				if(this._target&&this._target!=this._lastTarget){
+				if(this._target&&this._target!==this._lastTarget){
+
 					this._lastTarget=this._target;
+					this.emit('unfocus', this._lastTarget);
+
 				}
 				this._target=e.target;
+				this.emit('focus', this._target);
+				return;
 			}
+
+			if(this._target&&this._target!==this._lastTarget){
+				this._lastTarget=this._target;
+				this.emit('unfocus', this._lastTarget);
+			}
+			this._target=null;
 		})
 
 		this._element = form;
