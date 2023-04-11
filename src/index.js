@@ -94,6 +94,34 @@ SurveyRenderer.addItem('textfield', (item, container, renderer, page) => {
 	
 });
 
+SurveyRenderer.addItem('textarea', (item, container, renderer, page) => {
+
+	var label = null;
+
+	var fieldName=labelTemplate(item.fieldName, renderer);
+
+	if (item.label) {
+		label = container.appendChild(new Element('label', {
+			for: fieldName,
+			html: '<span>'+labelTemplate(item.label, renderer)+'</span>'
+		}));
+
+	}
+
+	var input = (label || container).appendChild(new Element('textarea', {
+		name: fieldName
+	}));
+
+	if(item.format){
+		renderer.getFormatter(item.format)(input, item);
+	}
+
+	if (item.placeholder) {
+		input.setAttribute('placeholder', item.placeholder);
+	}
+
+});
+
 
 SurveyRenderer.addFormatter('time', (input, item)=>{
 	input.type='time'
