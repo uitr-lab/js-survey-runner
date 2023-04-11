@@ -179,6 +179,16 @@ export class SurveyRenderer extends EventEmitter {
 			"class": "survey-view"
 		}));
 
+		form.addEventListener('focusin', (e)=>{
+
+			if(typeof e.target.name=='string'){
+				if(this._target&&this._target!=this._lastTarget){
+					this._lastTarget=this._target;
+				}
+				this._target=e.target;
+			}
+		})
+
 		this._element = form;
 
 
