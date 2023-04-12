@@ -165,6 +165,17 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
+	getPreviousTarget(){
+		return this._lastTarget||null;
+	}
+
+	/**
+	 * returns the active (in focus) input element
+	 */
+	getCurrentTarget(){
+		return this._target||null;
+	}
+
 	_render(definition, data) {
 
 
