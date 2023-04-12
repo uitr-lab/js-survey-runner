@@ -406,6 +406,13 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
+	_executeNavigationLogic(data){
+
+		return ((formData, pageData, renderer) => {
+			return eval('(function(){ ' + "\n\n" + data.navigationLogic + "\n\n" + ' })()')
+		})(this.getFormData(), this.getPageData(), this);
+	}
+
 	_renderNode(data, container) {
 
 		this._setSourceBase(data.name)
@@ -424,7 +431,7 @@ export class SurveyRenderer extends EventEmitter {
 			}));
 		}
 
-		this._renderSetNavigation(data.items, 0, node, (set) => {
+		this._renderSetNavigation(data, 0, node, (set) => {
 
 			if (data.nodes && data.nodes.length) {
 
@@ -441,9 +448,7 @@ export class SurveyRenderer extends EventEmitter {
 
 							var nextNode = data.nodes[0];
 
-							var index = ((formData, pageData, renderer) => {
-								return eval('(function(){ ' + "\n\n" + data.navigationLogic + "\n\n" + ' })()')
-							})(this.getFormData(), this.getPageData(), this);
+							var index = this._executeNavigationLogic(data);
 
 							var handleIndex = (index) => {
 
@@ -487,7 +492,9 @@ export class SurveyRenderer extends EventEmitter {
 
 
 
-	_renderSetNavigation(items, i, container, complete) {
+	_renderSetNavigation(data, i, container, complete) {
+
+		var items=data.items;
 
 		this._disableForward = false;
 		delete this._validators;
@@ -515,7 +522,7 @@ export class SurveyRenderer extends EventEmitter {
 
 							e.stopPropagation();
 							set.parentNode.removeChild(set);
-							this._renderSetNavigation(items, --i, container, complete);
+							this._renderSetNavigation(data, --i, container, complete);
 						}
 					}
 				}))
@@ -536,6 +543,12 @@ export class SurveyRenderer extends EventEmitter {
 
 							e.stopPropagation();
 							set.parentNode.removeChild(set);
+
+							/**
+							 * Still want to execute navigation logic, user can implement submit fn here
+							 */
+							/*var index = */this._executeNavigationLogic(data);
+							
 							this.emit('complete');
 							container.appendChild(new Element('h3', {
 								"class":"complete-page",
@@ -561,7 +574,7 @@ export class SurveyRenderer extends EventEmitter {
 
 						e.stopPropagation();
 						set.parentNode.removeChild(set);
-						this._renderSetNavigation(items, ++i, container, complete);
+						this._renderSetNavigation(data, ++i, container, complete);
 					}
 				}
 			})));
@@ -571,10 +584,10 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 	/**
-		* returns the entire data object containing all data collected by forms and pages so far
-		* use getData if possible as it returns the data in the context of the current page (which may be the same data 
-		* as returned by this method)
-		*/
+	* returns the entire data object containing all data collected by forms and pages so far
+	* use getData if possible as it returns the data in the context of the current page (which may be the same data 
+	* as returned by this method)
+	*/
 	getFormData() {
 		return JSON.parse(JSON.stringify(this._formData));
 	}
