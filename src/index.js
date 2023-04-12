@@ -442,8 +442,23 @@ SurveyRenderer.addItem('validation', (item, container, renderer, page) => {
 					renderer.getInput(field).removeAttribute('data-validation-error');
 				});
 				
+				var lastFocus=renderer.getPreviousTarget();
+				var currentFocus=renderer.getCurrentTarget();
+
 				Object.keys(fields).forEach((field ,i)=>{
-					renderer.getInput(field).setAttribute('data-validation-error',errors[i].message);
+
+
+					var input=renderer.getInput(field);
+					if(currentFocus){
+						if(currentFocus.compareDocumentPosition(input)===4){
+							/**
+							 * for all inputs after the current target do not add error indicators
+							 */
+							return;
+						}
+					}
+
+					input.setAttribute('data-validation-error',errors[i].message);
 				});
 
 				throw {errors:errors, fields:fields};
