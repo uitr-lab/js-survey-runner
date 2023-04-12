@@ -7,6 +7,13 @@ You can create a form/survey json definition, using the builder user interface a
 
 ## Simple usage
 
+```
+├── documentRoot
+│   ├── dist
+│   │   ├── form.js
+│   └── survey.json
+```
+
 ```html
 
 <script src="dist/form.js"></script>
@@ -14,7 +21,7 @@ You can create a form/survey json definition, using the builder user interface a
 
 (function(){ 
 
-   document.body.appendChild((new SurveyRenderer()).render("rsvp.json"));
+   document.body.appendChild((new SurveyRenderer()).render("survey.json"));
 
 })();
 
