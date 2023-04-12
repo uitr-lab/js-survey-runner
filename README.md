@@ -1,5 +1,8 @@
-# js-survey-runner
+# js-survey-runner 
 
+Render forms and surveys with javascript from json definition
+
+You can create a form/survey json definition, using the builder user interface at https://survey.uitrlab.ok.ubc.ca/survey-tool-demo/
 
 
 ## Simple usage
