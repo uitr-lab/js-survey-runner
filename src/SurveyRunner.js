@@ -606,10 +606,9 @@ export class SurveyRenderer extends EventEmitter {
 
 
 
-	async postFormData(url) {
+	async postFormData(url, options) {
 
-
-		const response = await fetch(url, {
+		let opts={
 			method: "POST", // *GET, POST, PUT, DELETE, etc.
 			mode: "same-origin", // no-cors, *cors, same-origin
 			cache: "no-store", // *default, no-cache, reload, force-cache, only-if-cached
@@ -621,7 +620,16 @@ export class SurveyRenderer extends EventEmitter {
 			redirect: "follow", // manual, *follow, error
 			referrerPolicy: "no-referrer", // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
 			body: JSON.stringify(this.getFormData()), // body data type must match "Content-Type" header
-		});
+		};
+
+		if(options){
+			Object.keys(options).forEach((o)=>{
+				opts[o]=options[o];
+			});
+		}
+
+
+		const response = await fetch(url, opts);
 
 		return response.json(); // parses JSON response into native JavaScript objects
 
