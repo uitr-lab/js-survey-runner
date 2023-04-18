@@ -35,6 +35,24 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
+	getLabelFor(...args){
+
+
+		var key=args.shift();
+		var defaultValue=args.pop();
+
+		var data={};
+
+		args.forEach((arg)=>{
+			if(arg[key]){
+				data[key]=arg[key];
+			}
+		});
+
+
+		return data[key]||this._options[key]||defaultValue;
+	}
+
 
 	setOptions(opt){
 
@@ -447,7 +465,7 @@ export class SurveyRenderer extends EventEmitter {
 			if (data.nodes && data.nodes.length) {
 
 				return new Element('button', {
-					html: "Next",
+					html: this.getLabelFor('nextNodeLabel', data, data.items[0], 'Next'),
 					events: {
 						click: (e) => {
 
@@ -507,7 +525,7 @@ export class SurveyRenderer extends EventEmitter {
 
 
 
-	_renderSetNavigation(data, i, container, complete) {
+	_renderSetNavigation(data, i, container,  complete) {
 
 		var items=data.items;
 
@@ -529,7 +547,7 @@ export class SurveyRenderer extends EventEmitter {
 			if (i > 0) {
 
 				nav.appendChild(new Element('button', {
-					html: "Back",
+					html: this.getLabelFor('backLabel', data, items[i], 'Back'),
 					events: {
 						click: (e) => {
 
@@ -549,8 +567,9 @@ export class SurveyRenderer extends EventEmitter {
 					complete = complete();
 				}
 
+				
 				complete = complete || new Element('button', {
-					html: this._options.completeLabel||"Complete",
+					html: this.getLabelFor('completeLabel', data, items[i], 'Complete'),
 					events: {
 						click: (e) => {
 
@@ -581,7 +600,7 @@ export class SurveyRenderer extends EventEmitter {
 			}
 
 			this._setForwardBtn(nav.appendChild(new Element('button', {
-				html: "Next",
+				html: this.getLabelFor('nextLabel', data, items[i], 'Next'),
 				events: {
 					click: (e) => {
 
