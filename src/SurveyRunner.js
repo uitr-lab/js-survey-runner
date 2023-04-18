@@ -494,9 +494,13 @@ export class SurveyRenderer extends EventEmitter {
 					}
 				});
 			}
+		}).then(()=>{
+			
+			this.emit('renderedNode', data, node);
+		
 		});
 
-		this.emit('renderNode');
+		this.emit('renderNode', data, node);
 
 
 	}
@@ -515,7 +519,7 @@ export class SurveyRenderer extends EventEmitter {
 
 		var set = container.appendChild(new Element('div'));
 
-		this._renderSet(items[i], set).then(() => {
+		return this._renderSet(items[i], set).then(() => {
 
 
 
