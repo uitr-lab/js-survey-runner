@@ -932,6 +932,6 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 }
-
+SurveyRenderer.Element=Element;
 
 window.SurveyRenderer = SurveyRenderer;
