@@ -35,6 +35,30 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
+
+	getConfigValue(key, defaultValue){
+
+		var config=this._config||{};
+		if(typeof config[key]=='undefined'){
+
+			if(typeof defaultValue=='function'){
+				return defaultValue();
+			}
+			return defaultValue;
+		}
+
+		return config[key];
+
+	}
+
+	setConfigValue(key, value){
+
+		this._config=this._config||{};
+		this._config[key]=value;
+
+		return this;
+	}
+
 	getLabelFor(...args){
 
 
@@ -124,7 +148,7 @@ export class SurveyRenderer extends EventEmitter {
 
 			name = name.split('(').shift();
 			
-
+			args.push(this);
 
 			return ((SurveyRenderer._formatters || {})[name] || (() => { })).apply(null, args);
 		}
@@ -913,19 +937,42 @@ export class SurveyRenderer extends EventEmitter {
 	withVariables(vars, cb) {
 
 		var original = {}
+		var target=this._formData;
 		Object.keys(vars).forEach((k) => {
-			original[k] = this._formData[k];
-			this._formData[k] = vars[k];
+			original[k] = target[k];
+			target[k] = vars[k];
 		});
 
 		cb();
 
 		Object.keys(vars).forEach((k) => {
 			if (typeof original[k] == 'undefined') {
-				delete this._formData[k];
+				delete target[k];
 				return;
 			}
-			this._formData[k] = original[k];
+			target[k] = original[k];
+		});
+
+
+	}
+
+	withPageVariables(vars, cb) {
+
+		var original = {}
+		var target=this._currentFormData();
+		Object.keys(vars).forEach((k) => {
+			original[k] = target[k];
+			target[k] = vars[k];
+		});
+
+		cb();
+
+		Object.keys(vars).forEach((k) => {
+			if (typeof original[k] == 'undefined') {
+				delete target[k];
+				return;
+			}
+			target[k] = original[k];
 		});
 
 

@@ -3,6 +3,15 @@ import {
 	EventEmitter
 } from 'events';
 
+
+import {
+	LoopRender
+} from './helpers/LoopRender.js';
+
+import {
+	ListRender
+} from './helpers/ListRender.js';
+
 export class PageRenderer extends EventEmitter {
 
 
@@ -33,8 +42,16 @@ export class PageRenderer extends EventEmitter {
 	}
 
 
-	getData(){
+	getFormData(){
 		return this._renderer.getFormData();
+	}
+
+	getContextData(){
+		return this._renderer.getPageData();
+	}
+
+	withVariables(vars, cb) {
+		return this._renderer.withVariables(vars, cb);
 	}
 
 	_renderItem(item, container) {
@@ -58,6 +75,15 @@ export class PageRenderer extends EventEmitter {
 		throw 'Type not defined: ' + item.type
 
 
+	}
+
+
+	renderLoop(key, renderFn, container){
+		return (new LoopRender(this)).renderFieldValueCount(key, renderFn, container);
+	}
+
+	renderList(renderFn, container, options){
+		return (new ListRender(this)).renderList(renderFn, container, options);
 	}
 
 

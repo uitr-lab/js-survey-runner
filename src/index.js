@@ -24,6 +24,11 @@ import {
 } from './helpers/Options.js'
 
 
+import {
+	GoogleSearchField
+} from './helpers/GoogleSearchField.js'
+
+
 import  Schema  from 'async-validator';
 
 const labelTemplate=(label, renderer)=>{
@@ -142,6 +147,19 @@ SurveyRenderer.addFormatter('number', (input, item, min, max)=>{
 	}
 
 });
+
+
+SurveyRenderer.addFormatter('geocode', (input, item, renderer)=>{
+	
+	new GoogleSearchField(input, {
+		apiKey:renderer.getConfigValue('googleMapApiKey', ()=>{
+			console.error('missing renderer.setConfigValue("googleMapApiKey", "XYZ...")')
+		})
+	});
+
+});
+
+
 
 
 SurveyRenderer.addItem('checkbox', (item, container, renderer, page) => {
