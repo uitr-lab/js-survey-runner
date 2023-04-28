@@ -27,6 +27,10 @@ export class ListRender extends EventEmitter {
 
 	}
 
+	needsUpdate() {
+		this._page.needsUpdate();
+	}
+
 	_throttleUpdate(){
 
 		if(this._updateTimeout){
@@ -77,14 +81,14 @@ export class ListRender extends EventEmitter {
 		 return this._wrap;
 	}
 
-	_getDataItem(item, data){
+	_getDataItem(itemEl, data){
 
 		data=data||this._page.getContextData();
 
 	
 
 		var dataset={};
-		Array.prototype.slice.call(item.querySelectorAll("*")).forEach((el) => {
+		Array.prototype.slice.call(itemEl.querySelectorAll("*")).forEach((el) => {
 
 			if(el.name){
 				if(typeof data[el.name]!='undefined'){
@@ -123,11 +127,42 @@ export class ListRender extends EventEmitter {
 
 	}
 
+	getItemInput(index, name){
+		
+		var itemEl=this.getItems()[index];
+
+		var results=Array.prototype.slice.call(itemEl.querySelectorAll("*")).filter((el) => {
+
+			if(el.name){
+				
+				if(el.name===name){
+					return true;
+				}
+
+				var key=el.name;
+				if(this._datasetKeyFmt){
+					key=this._datasetKeyFmt(key);
+				}
+				if(key===name){
+					return true;
+				}
+			}
+			
+
+			return false;
+
+		});
+
+		return results.length>0?results[0]:null;
+		
+	}
+
 	renderList(defaultRenderFn, container, opt) {
 
 		this._defaultRenderFn=defaultRenderFn;
 
 		opt=opt||{};
+
 
 		this._wrap = container.appendChild(this.getElement());
 
@@ -150,6 +185,12 @@ export class ListRender extends EventEmitter {
 			events: {
 				click: (e) => {
 					e.preventDefault();
+
+					// if (this._nextItems.length > 0) {
+					// 	this.setCurrentIndexNext();
+					// 	return;
+					// }
+
 					this._addItem();
 
 				}
@@ -165,32 +206,42 @@ export class ListRender extends EventEmitter {
 	_addItem(){
 
 
+
+
 		if(this._currentItem){
 
-			this._previousItems.push(this._currentItem);
+			this._previousItems=this.getItems();
+			this._nextItems=[]
 			this._currentItem.classList.remove('active');
 			this._currentItem.classList.add('collapse');
 
 		}
 
-		if (this._nextItems.length > 0) {
-			this._currentItem = this._nextItems.shift();
-			this._currentItem.classList.remove('collapse');
-			this._throttleUpdate();
-			return;
-		}
 
 		this._page.withVariables({
 			"loopIndex": this._index
 		}, () => {
 			var activityEl = this._wrap.appendChild(new Element('div', {
-				"class":"active"
+				"class":"active", 
+				events:{
+					click:()=>{
+						if(activityEl!=this._currentItem){
+							this.setCurrentItem(activityEl)
+						}
+					}
+				}
 			}));
 
 			this._defaultRenderFn(activityEl);
 			this._currentItem = activityEl;
 			this._addItemButtons(activityEl, this._index);
+			
 			this._throttleUpdate();
+
+			this.emit('addItem', this._currentItem, this._index);
+
+
+
 		});
 
 		this._index++;
@@ -198,8 +249,22 @@ export class ListRender extends EventEmitter {
 
 	}
 
+
+
 	getCurrentIndex(){
 		return this.getItems().indexOf(this._currentItem);
+	}
+
+	setCurrentIndexNext(){
+		setCurrentIndex(this._previousItems.length+1)
+	}
+	
+	setCurrentItem(el){
+
+		var i=this.getItems().indexOf(el);
+		if(i>=0){
+			this.setCurrentIndex(i);
+		}
 	}
 
 	setCurrentIndex(index){

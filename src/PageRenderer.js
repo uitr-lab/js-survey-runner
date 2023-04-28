@@ -37,6 +37,11 @@ export class PageRenderer extends EventEmitter {
 
 	}
 
+
+	needsUpdate() {
+		this._renderer.needsUpdate();
+	}
+
 	remove(){
 		this.emit('remove');
 	}

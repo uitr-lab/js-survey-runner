@@ -338,7 +338,7 @@ SurveyRenderer.addItem('script', (item, container, renderer, page) => {
 
 		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
 
-		var resp=((formData, pageData, renderer, page)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer, page);
+		var resp=((formData, pageData, renderer, page)=>{ return eval(script); })( renderer.getFormData(), renderer.getPageData(), renderer, page);
 
 
 

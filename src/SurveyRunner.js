@@ -736,6 +736,26 @@ export class SurveyRenderer extends EventEmitter {
 		}).then((value) => {
 
 			this.setFormValue(name, value);
+			return value;
+
+		}).catch(console.error)
+
+	}
+
+	fetchFormData(url) {
+
+		return fetch(url, {
+			mode: "no-cors", // no-cors, *cors, same-origin
+			cache: "no-cache",
+			credentials: "omit",
+		}).then((resp) => {
+
+			return resp.json();
+
+		}).then((value) => {
+
+			this.setFormData(value);
+			return value;
 
 		}).catch(console.error)
 
