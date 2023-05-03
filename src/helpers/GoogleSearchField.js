@@ -51,7 +51,14 @@ export class GoogleSearchField{
 
 		GoogleSearchField._loader.onLoaded(()=>{
 
-			new google.maps.places.Autocomplete(input);
+			var autocomplete=new google.maps.places.Autocomplete(input);
+
+			autocomplete.addListener("place_changed", () => {
+
+				var place = autocomplete.getPlace();
+				console.log(place);
+
+			});
 
 		});
 
