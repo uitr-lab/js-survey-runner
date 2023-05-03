@@ -218,6 +218,11 @@ export class SurveyRenderer extends EventEmitter {
 		return this._target||null;
 	}
 
+	restart(){
+		this._container.innerHTML='';
+		this._render(this._data);
+	}
+
 	_render(definition, data) {
 
 
