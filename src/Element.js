@@ -37,7 +37,7 @@ export class Element {
 			}
 
 
-			if((['type', 'value', 'href', 'target', 'name', 'for', 'checked', 'placeholder', 'selected', 'disabled', 'src', 'async', 'defer']).indexOf(key)>=0){
+			if((['type', 'value', 'href', 'target', 'name', 'for', 'checked', 'placeholder', 'selected', 'disabled', 'src', 'async', 'defer', 'id']).indexOf(key)>=0){
 				if(key==='for'){
 					key='htmlFor';
 				}

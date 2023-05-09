@@ -148,6 +148,17 @@ SurveyRenderer.addFormatter('number', (input, item, min, max)=>{
 
 });
 
+SurveyRenderer.addFormatter('replace', (input, item, pattern, replace)=>{
+	input.pattern=pattern
+	input.oninput=()=>{
+		var v= input.value;
+		v=v.replace(new RegExp(pattern, 'g'), '');
+		if(v!==input.value){
+			input.value=v;
+		}
+	}
+});
+
 
 SurveyRenderer.addFormatter('geocode', (input, item, renderer)=>{
 	
@@ -214,14 +225,16 @@ SurveyRenderer.addItem('radio', (item, container, renderer, page) => {
 	(new Options()).addStringFormatter((s)=>{ return labelTemplate(s, renderer); }).parseValueList(item, (option)=>{
 
 		var radio = container.appendChild(new Element('label', {
-			"for":option.value,
+			"for":fieldName+"_"+option.value + "_",
+
 			html:labelTemplate(option.label, renderer)
 		}));
 
 		 radio.appendChild(new Element('input',{
 			type:'radio',
 			value:option.value,
-			name: fieldName
+			name: fieldName,
+			id: fieldName+"_"+option.value + "_"
 		}))
 
 	})
