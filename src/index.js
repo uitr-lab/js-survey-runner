@@ -1,6 +1,6 @@
 import {
-	SurveyRunner
-} from './SurveyRunner.js'
+	SurveyRenderer
+} from './SurveyRenderer.js'
 
 import {
 	Element
@@ -27,6 +27,19 @@ import {
 import {
 	GoogleSearchField
 } from './helpers/GoogleSearchField.js'
+
+import {
+	FieldsetNavigation
+} from './helpers/FieldsetNavigation.js'
+
+import {
+	FeedbackForm
+} from './helpers/FeedbackForm.js'
+
+
+
+window.FieldsetNavigation=FieldsetNavigation;
+window.FeedbackForm=FeedbackForm;
 
 
 import  Schema  from 'async-validator';

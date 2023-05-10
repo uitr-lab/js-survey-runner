@@ -20,7 +20,7 @@ export class SurveyRenderer extends EventEmitter {
 
 		this._options={
 			completeLabel:"Complete",
-			completePageHtml:"Complete! Thank you."
+			completePageHtml:"Complete! Thank you.",
 		};
 
 		this.on('renderPage', (page) => {
@@ -471,6 +471,27 @@ export class SurveyRenderer extends EventEmitter {
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
+
+	_executeOnNavigationEntryLogic(node, fromNode){
+
+		return ((formData, pageData, renderer) => {
+			return eval('(function(){ ' + "\n\n" + data.entryLogic + "\n\n" + ' })()')
+		})(this.getFormData(), this.getPageData(), this);
+	}
+
+	_setNext(fn){
+		this._next=fn;
+		return this;
+	}	
+
+	next(){
+
+		var fn=this._next;
+		delete this._next;
+		fn();
+		return this;
+	}
+
 	_renderNode(data, container) {
 
 		this._setSourceBase(data.name)
@@ -493,50 +514,57 @@ export class SurveyRenderer extends EventEmitter {
 
 			if (data.nodes && data.nodes.length) {
 
+				this._setNext(()=>{
+					this._update();
+
+					node.parentNode.removeChild(node);
+
+					var nextNode = data.nodes[0];
+
+					var index = this._executeNavigationLogic(data);
+
+					var handleIndex = (index) => {
+
+						if (typeof index == 'number') {
+							index = parseInt(index);
+							nextNode = data.nodes[index];
+						}
+
+						if (typeof index == 'string') {
+
+							nextNode = this._findNextNodePrefix(index, data) || this._findNode(index);
+							//throw 'Not implemented: Navigation to node uuid';
+						}
+
+						if (typeof nextNode == 'string') {
+							nextNode = this._findNode(nextNode);
+							//throw 'Not implemented: Navigation to node uuid';
+						}
+
+
+						if (index instanceof Promise) {
+							index.then(handleIndex);
+							return;
+						}
+
+						this._renderNode(nextNode);
+
+					};
+
+					handleIndex(index);
+
+				});
+
 				return new Element('button', {
 					html: this.getLabelFor('nextNodeLabel', data, data.items[0], 'Next'),
 					events: {
 						click: (e) => {
 
-							this._update();
-
+							
 							e.stopPropagation();
-							node.parentNode.removeChild(node);
+							this.next();
 
-
-							var nextNode = data.nodes[0];
-
-							var index = this._executeNavigationLogic(data);
-
-							var handleIndex = (index) => {
-
-								if (typeof index == 'number') {
-									index = parseInt(index);
-									nextNode = data.nodes[index];
-								}
-
-								if (typeof index == 'string') {
-
-									nextNode = this._findNextNodePrefix(index, data) || this._findNode(index);
-									//throw 'Not implemented: Navigation to node uuid';
-								}
-
-								if (typeof nextNode == 'string') {
-									nextNode = this._findNode(nextNode);
-									//throw 'Not implemented: Navigation to node uuid';
-								}
-
-
-								if (index instanceof Promise) {
-									index.then(handleIndex);
-									return;
-								}
-
-								this._renderNode(nextNode);
-
-							};
-
-							handleIndex(index);
+							
 						}
 					}
 				});
@@ -596,30 +624,41 @@ export class SurveyRenderer extends EventEmitter {
 					complete = complete();
 				}
 
-				
-				complete = complete || new Element('button', {
-					html: this.getLabelFor('completeLabel', data, items[i], 'Complete'),
-					events: {
-						click: (e) => {
+				if(!complete){
 
-							this._update();
+					this._setNext(()=>{
 
-							e.stopPropagation();
-							set.parentNode.removeChild(set);
+						this._update();
+						set.parentNode.removeChild(set);
 
-							/**
-							 * Still want to execute navigation logic, user can implement submit fn here
-							 */
-							/*var index = */this._executeNavigationLogic(data);
-							
-							this.emit('complete');
-							container.appendChild(new Element('h3', {
-								"class":"complete-page",
-								html: this._options.completePageHtml||"Complete! Thank you."
-							}))
+						/**
+						 * Still want to execute navigation logic, user can implement submit fn here
+						 */
+						/*var index = */this._executeNavigationLogic(data);
+						
+						this.emit('complete');
+						container.appendChild(new Element('h3', {
+							"class":"complete-page",
+							html: this._options.completePageHtml||"Complete! Thank you."
+						}))
+
+					});
+
+					complete = new Element('button', {
+						html: this.getLabelFor('completeLabel', data, items[i], 'Complete'),
+						events: {
+							click: (e) => {
+	
+								
+								e.stopPropagation();
+								this.next();
+								
+							}
 						}
-					}
-				});
+					});
+
+				}
+				
 
 
 				this._setForwardBtn(complete);
