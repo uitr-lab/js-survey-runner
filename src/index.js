@@ -18,15 +18,17 @@ import {
 	toDataURL
 } from 'qrcode';
 
-
 import {
 	Options
 } from './helpers/Options.js'
 
-
 import {
 	GoogleSearchField
 } from './helpers/GoogleSearchField.js'
+
+
+import  Schema  from 'async-validator';
+
 
 import {
 	FieldsetNavigation
@@ -36,13 +38,19 @@ import {
 	FeedbackForm
 } from './helpers/FeedbackForm.js'
 
+import {
+	FormDataStorage
+} from './helpers/FormDataStorage.js'
 
+import {
+	NavMenu
+} from './helpers/NavMenu.js'
 
 window.FieldsetNavigation=FieldsetNavigation;
 window.FeedbackForm=FeedbackForm;
+window.FormDataStorage=FormDataStorage;
+window.NavMenu=NavMenu;
 
-
-import  Schema  from 'async-validator';
 
 const labelTemplate=(label, renderer)=>{
 
@@ -58,7 +66,6 @@ const labelTemplate=(label, renderer)=>{
 		return label;
 	}
 }
-
 
 
 SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {

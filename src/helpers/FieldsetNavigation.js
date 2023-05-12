@@ -31,6 +31,8 @@ export class FieldsetNavigation extends EventEmitter {
                 return el.tagName.toLowerCase() == 'fieldset' || el.classList.contains('fieldset');
             });
 
+            allFieldsets[0].classList.add('first-focus');
+
 
             var i = 0;
             allFieldsets[i].classList.add('focus');

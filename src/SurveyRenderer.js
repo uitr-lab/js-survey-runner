@@ -471,8 +471,16 @@ export class SurveyRenderer extends EventEmitter {
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
+	_executeBackNavigationLogic(data){
 
-	_executeOnNavigationEntryLogic(node, fromNode){
+		return ((formData, pageData, renderer) => {
+			return eval('(function(){ ' + "\n\n" + data.backLogic + "\n\n" + ' })()')
+		})(this.getFormData(), this.getPageData(), this);
+	}
+
+
+
+	_executeOnNavigationEntryLogic(data){
 
 		return ((formData, pageData, renderer) => {
 			return eval('(function(){ ' + "\n\n" + data.entryLogic + "\n\n" + ' })()')
@@ -492,11 +500,53 @@ export class SurveyRenderer extends EventEmitter {
 		return this;
 	}
 
+	_push(nodeData){
+		if(!this._stack){
+			this._stack=[];
+		}
+
+		this._stack.push(nodeData);
+	}
+
+	navigateTo(uuid){
+
+		/**
+		 * attempt to navigate using stack if possible
+		 */
+		
+		var node=this._findNextNodePrefix(uuid, this._data);
+		
+		this._element.innerHTML=''; //would like a nicer way to clear
+		
+		this._renderNode(node);
+
+	}
+
+	hasBack(){
+		return this._stack&&this._stack.length>1;
+	}
+
+	back(){
+
+		var current=this._stack.pop();
+
+		this._executeBackNavigationLogic(current);
+
+		var last=this._stack.pop();
+		this._renderNode(last);
+
+	}
+
 	_renderNode(data, container) {
+
+
+		this._push(data);
 
 		this._setSourceBase(data.name)
 
-		this._resetContext()
+		this._resetContext();
+
+		this._executeOnNavigationEntryLogic(data);
 
 		container = container || this._element;
 
@@ -556,6 +606,7 @@ export class SurveyRenderer extends EventEmitter {
 				});
 
 				return new Element('button', {
+					"class":"section-next",
 					html: this.getLabelFor('nextNodeLabel', data, data.items[0], 'Next'),
 					events: {
 						click: (e) => {
@@ -600,17 +651,39 @@ export class SurveyRenderer extends EventEmitter {
 
 			var nav = set.appendChild(new Element('nav'));
 
+			if(i==0&&this.hasBack()){
+
+				nav.appendChild(new Element('button', {
+					html: this.getLabelFor('backLabel', data, items[i], 'Back'),
+					"class":"section-back",
+					events: {
+						click: (e) => {
+
+							e.stopPropagation();
+							e.preventDefault();
+
+							this._update();
+							set.parentNode.removeChild(set);
+							this.back();
+						}
+					}
+				}))
+
+			}
+
 
 			if (i > 0) {
 
 				nav.appendChild(new Element('button', {
 					html: this.getLabelFor('backLabel', data, items[i], 'Back'),
+					"class":"page-back",
 					events: {
 						click: (e) => {
 
-							this._update();
-
 							e.stopPropagation();
+							e.preventDefault();
+
+							this._update();
 							set.parentNode.removeChild(set);
 							this._renderSetNavigation(data, --i, container, complete);
 						}
@@ -645,12 +718,13 @@ export class SurveyRenderer extends EventEmitter {
 					});
 
 					complete = new Element('button', {
+						"class":"section-next section-complete",
 						html: this.getLabelFor('completeLabel', data, items[i], 'Complete'),
 						events: {
 							click: (e) => {
-	
-								
+
 								e.stopPropagation();
+								e.preventDefault();
 								this.next();
 								
 							}
@@ -669,12 +743,13 @@ export class SurveyRenderer extends EventEmitter {
 
 			this._setForwardBtn(nav.appendChild(new Element('button', {
 				html: this.getLabelFor('nextLabel', data, items[i], 'Next'),
+				"class":"page-next",
 				events: {
 					click: (e) => {
 
-						this._update();
-
 						e.stopPropagation();
+
+						this._update();
 						set.parentNode.removeChild(set);
 						this._renderSetNavigation(data, ++i, container, complete);
 					}
@@ -973,6 +1048,11 @@ export class SurveyRenderer extends EventEmitter {
 
 					if (el.type === 'checkbox') {
 						el.checked = this._currentFormData()[el.name] === 'on';
+						return;
+					}
+
+					if (el.type === 'radio') {
+						el.checked = this._currentFormData()[el.name] === el.value;
 						return;
 					}
 
