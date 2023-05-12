@@ -23,7 +23,9 @@ import {
 } from './helpers/Options.js'
 
 import {
-	GoogleSearchField
+	GoogleSearchField,
+	GeocodeFormat,
+	GoogleMap
 } from './helpers/GoogleSearchField.js'
 
 
@@ -152,6 +154,12 @@ SurveyRenderer.addFormatter('time', (input, item)=>{
 	input.type='time'
 });
 
+SurveyRenderer.addFormatter('capitalize', (input, item)=>{
+	input.oninput=()=>{
+		input.value=input.value.toUpperCase();
+	}
+});
+
 SurveyRenderer.addFormatter('password', (input, item)=>{
 	input.type='password'
 });
@@ -180,12 +188,70 @@ SurveyRenderer.addFormatter('replace', (input, item, pattern, replace)=>{
 });
 
 
-SurveyRenderer.addFormatter('geocode', (input, item, renderer)=>{
+SurveyRenderer.addFormatter('geolocate', (input, item, format, renderer)=>{
+
+	if(typeof renderer=="undefined"){
+		renderer=format;
+		format=null;
+	}
 	
-	new GoogleSearchField(input, {
+	(new GoogleSearchField({
+		emmiter:renderer,
+		format:format,
 		apiKey:renderer.getConfigValue('googleMapApiKey', ()=>{
 			console.error('missing renderer.setConfigValue("googleMapApiKey", "XYZ...")')
 		})
+	})).addGeolocate(input);
+
+});
+
+
+SurveyRenderer.addFormatter('map', (input, item, format, renderer)=>{
+
+	if(typeof renderer=="undefined"){
+		renderer=format;
+		format=null;
+	}
+	
+	(new GoogleMap({
+		emmiter:renderer,
+		format:format,
+		apiKey:renderer.getConfigValue('googleMapApiKey', ()=>{
+			console.error('missing renderer.setConfigValue("googleMapApiKey", "XYZ...")')
+		})
+	})).renderMapOverlay(input);
+
+});
+
+
+SurveyRenderer.addFormatter('geocode', (input, item, format, renderer)=>{
+	
+	if(typeof renderer=="undefined"){
+		renderer=format;
+		format=null;
+	}
+
+	new GoogleSearchField(input, {
+		emmiter:renderer,
+		format:format,
+		apiKey:renderer.getConfigValue('googleMapApiKey', ()=>{
+			console.error('missing renderer.setConfigValue("googleMapApiKey", "XYZ...")')
+		})
+	});
+
+});
+
+SurveyRenderer.addFormatter('geocode.field', (input, item, field, format, renderer)=>{
+
+	if(typeof renderer=="undefined"){
+		renderer=format;
+		format=null;
+	}
+
+	//capture geocode value/part from another field
+	
+	renderer.on('geocode.'+field, (place, value)=>{
+		(new GeocodeFormat()).applyFormat(input, place, format, value);
 	});
 
 });

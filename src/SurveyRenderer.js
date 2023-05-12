@@ -134,6 +134,19 @@ export class SurveyRenderer extends EventEmitter {
 	getFormatter(name) {
 		return (...args) => {
 
+			if(name.indexOf('|')>0){
+				var chain=name.split('|');
+
+				var returnVal=null;
+				while(chain.length>0){
+					this.getFormatter(chain.shift()).apply(null, args);
+				}
+
+				return;
+
+			}
+
+
 			if(name.indexOf('(')>0){
 
 				try{
@@ -613,6 +626,7 @@ export class SurveyRenderer extends EventEmitter {
 
 							
 							e.stopPropagation();
+							e.preventDefault();
 							this.next();
 
 							
