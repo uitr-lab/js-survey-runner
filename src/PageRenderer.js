@@ -59,6 +59,10 @@ export class PageRenderer extends EventEmitter {
 		return this._renderer.withVariables(vars, cb);
 	}
 
+	updateFormInputs(element){
+		return this._renderer.updateFormInputs(element);
+	}
+
 	_renderItem(item, container) {
 
 

@@ -671,14 +671,23 @@ SurveyRenderer.addItem('custom', (item, container, renderer, page) => {
 
 	var defaultRenderFn = (el)=>{  
 
-		renderer.withVariables(vars, ()=>{
-			return renderer.renderItem({
+		return renderer.withVariables(vars, ()=>{
+			
+			var returnVar = renderer.renderItem({
 				type:"fieldset",
 				items:item.items,
 				classNames:item.classNames
 			}, el||container);
 
-			renderer.needsUpdate();
+			if(!(returnVar instanceof Promise)){
+				returnVar=Promise.resolve(returnVar);
+			}
+
+
+			return returnVar.then((value)=>{
+				renderer.needsUpdate();
+				return value;
+			});
 
 		});
 
@@ -753,11 +762,16 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer, page) => {
 
 
 
-	(item.items||[]).forEach((item)=>{
+	return Promise.all((item.items||[]).map((item)=>{
 
-		renderer.renderItem(item, fieldset);
+		var fieldVar = renderer.renderItem(item, fieldset);
+		if(!(fieldVar instanceof Promise)){
+			return Promise.resolve(true);
+			
+		}
+		return fieldVar;
 
-	});
+	}));
 
 
 

@@ -1055,25 +1055,9 @@ export class SurveyRenderer extends EventEmitter {
 
 		return this.renderItems(data.items, container).then(() => {
 
-
-			Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el) => {
-
-				if (typeof el.name == 'string' && typeof this._currentFormData()[el.name] != 'undefined') {
-
-					if (el.type === 'checkbox') {
-						el.checked = this._currentFormData()[el.name] === 'on';
-						return;
-					}
-
-					if (el.type === 'radio') {
-						el.checked = this._currentFormData()[el.name] === el.value;
-						return;
-					}
-
-					el.value = this._currentFormData()[el.name];
-				}
-
-			});
+			
+			this.updateFormInputs(this._element);
+			
 
 			this._update();
 			this.emit('renderSet');
@@ -1083,6 +1067,33 @@ export class SurveyRenderer extends EventEmitter {
 
 
 	}
+
+	updateFormInputs(element){
+
+		var data=this.getPageData();
+		Array.prototype.slice.call(element.querySelectorAll("*")).forEach((el) => {
+
+
+
+			if (typeof el.name == 'string' && typeof data[el.name] != 'undefined') {
+
+				if (el.type === 'checkbox') {
+					el.checked = data[el.name] === 'on';
+					return;
+				}
+
+				if (el.type === 'radio') {
+					el.checked = data[el.name] === el.value;
+					return;
+				}
+
+				el.value = data[el.name];
+			}
+
+		});
+	}
+
+
 
 	renderItems(items, container) {
 		return this._pageRenderer.renderItems(items, container || this._element);
@@ -1101,7 +1112,7 @@ export class SurveyRenderer extends EventEmitter {
 			target[k] = vars[k];
 		});
 
-		cb();
+		var returnVar=cb();
 
 		Object.keys(vars).forEach((k) => {
 			if (typeof original[k] == 'undefined') {
@@ -1110,6 +1121,8 @@ export class SurveyRenderer extends EventEmitter {
 			}
 			target[k] = original[k];
 		});
+
+		return returnVar;
 
 
 	}
