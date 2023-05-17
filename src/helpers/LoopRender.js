@@ -13,7 +13,16 @@ export class LoopRender {
 		var listItems=[];
 		var _lastNum=-1
 		var renderLoop=() => {
-		   var num=parseInt(this._page.getFormData()[fieldName]);
+
+			var num;
+
+			if(parseInt(fieldName)+""===fieldName){
+				num=parseInt(fieldName);
+			}else{
+				num=parseInt(this._page.getFormData()[fieldName]);
+			}
+		   
+		 
 
 		   if(num===_lastNum||isNaN(num)){
 		      return;

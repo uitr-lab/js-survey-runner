@@ -481,21 +481,28 @@ export class SurveyRenderer extends EventEmitter {
 	_executeNavigationLogic(data){
 
 		return ((formData, pageData, renderer) => {
-			return eval('(function(){ ' + "\n\n" + data.navigationLogic + "\n\n" + ' })()')
+			return eval('(function(){ ' + "\n\n" + data.navigationLogic + "\n\n" + ' })()'+this.getSourceUrl('forwardNavigation'));
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
 	_executeBackNavigationLogic(data){
 
 		return ((formData, pageData, renderer) => {
-			return eval('(function(){ ' + "\n\n" + data.backLogic + "\n\n" + ' })()')
+			return eval('(function(){ ' + "\n\n" + data.backLogic + "\n\n" + ' })()'+this.getSourceUrl('backNavigation'));
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
 	_executeOnNavigationEntryLogic(data){
 
 		return ((formData, pageData, renderer) => {
-			return eval('(function(){ ' + "\n\n" + data.entryLogic + "\n\n" + ' })()')
+			return eval('(function(){ ' + "\n\n" + data.entryLogic + "\n\n" + ' })()'+this.getSourceUrl('entry'));
+		})(this.getFormData(), this.getPageData(), this);
+	}
+
+	_executeOnNavigationExitLogic(data){
+
+		return ((formData, pageData, renderer) => {
+			return eval('(function(){ ' + "\n\n" + data.exitLogic + "\n\n" + ' })()'+this.getSourceUrl('exit'));
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
@@ -529,7 +536,7 @@ export class SurveyRenderer extends EventEmitter {
 		var node=this._findNextNodePrefix(uuid, this._data);
 		
 		this._element.innerHTML=''; //would like a nicer way to clear
-		
+		this._executeOnNavigationExitLogic(this._stack[this._stack.length-1]);
 		this._renderNode(node);
 
 	}
@@ -542,7 +549,9 @@ export class SurveyRenderer extends EventEmitter {
 
 		var current=this._stack.pop();
 
+
 		this._executeBackNavigationLogic(current);
+		this._executeOnNavigationExitLogic(current);
 
 		var last=this._stack.pop();
 		this._renderNode(last);
@@ -554,7 +563,7 @@ export class SurveyRenderer extends EventEmitter {
 
 		this._push(data);
 
-		this._setSourceBase(data.name+'-'+data.uuid.substring(0, 5))
+		this._setSourceBase(data.name+'-'+data.uuid.substring(0, 5));
 
 		this._resetContext();
 
@@ -609,6 +618,8 @@ export class SurveyRenderer extends EventEmitter {
 							return;
 						}
 
+
+						this._executeOnNavigationExitLogic(data);
 						this._renderNode(nextNode);
 
 					};
@@ -1023,10 +1034,10 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 
-	getSourceUrl() {
+	getSourceUrl(file) {
 
 
-		var path = (this._sourceBase || "page")+  "/" + (this._scriptIndex++) +'-'+(this._sourceFile) + ".js?"
+		var path = (this._sourceBase || "page")+  "/" + (this._scriptIndex++) +'-'+(file||this._sourceFile) + ".js?"
 		path = path.split(' ').join('');
 
 		return '//# sourceURL=survey-runner://survey-items/scripts/' + path

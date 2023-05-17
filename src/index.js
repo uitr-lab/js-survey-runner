@@ -155,9 +155,9 @@ SurveyRenderer.addFormatter('time', (input, item)=>{
 });
 
 SurveyRenderer.addFormatter('capitalize', (input, item)=>{
-	input.oninput=()=>{
+	input.addEventListener('input',()=>{
 		input.value=input.value.toUpperCase();
-	}
+	});
 });
 
 SurveyRenderer.addFormatter('password', (input, item)=>{
@@ -174,17 +174,96 @@ SurveyRenderer.addFormatter('number', (input, item, min, max)=>{
 		input.max=max;
 	}
 
+	input.addEventListener('input',()=>{
+		var v= parseFloat(input.value);
+		if(typeof v=='number'&&!isNaN(v)){
+			if(typeof min=='number'&&v<min){
+				input.value=min;
+			}
+			if(typeof max=='number'&&v>min){
+				input.value=max;
+			}
+		}
+		
+	});
+
+	input.addEventListener('blur',()=>{
+
+		if(!input.value){
+			input.value=""; // valid symbols like . - remain, but input.value appears empty
+			return;
+		}
+
+		var v= parseFloat(input.value);
+		if(isNaN(v)){
+			v=0;
+			input.value=v;
+		}
+		if(typeof v=='number'){
+			if(typeof min=='number'&&v<min){
+				input.value=min;
+			}
+			if(typeof max=='number'&&v>min){
+				input.value=max;
+			}
+		}
+		
+	});
+
+});
+
+SurveyRenderer.addFormatter('integer', (input, item, defaultValue)=>{
+	
+	input.type='number';
+
+	input.addEventListener('input', ()=>{
+		var v= parseInt(input.value);
+		if(typeof v=='number'&&!isNaN(v)){
+			input.value=v;
+		}
+		
+	});
+
+	input.addEventListener('blur',()=>{
+
+		if(!input.value){
+			input.value="";
+			if(typeof defaultValue!='number'){
+				//if a default value was not defined make this field empty
+				return;
+			}
+		}
+
+		var v= parseInt(input.value);
+		if(isNaN(v)){
+			v=0;
+			if(typeof defaultValue=='number'){
+				v=defaultValue;
+			}
+			input.value=v;
+		}	
+	});
+
+});
+
+SurveyRenderer.addFormatter('max', (input, item, field, offset)=>{
+	
+	input.addEventListener('input',()=>{
+		var v= input.value;
+		
+	});
+
 });
 
 SurveyRenderer.addFormatter('replace', (input, item, pattern, replace)=>{
 	input.pattern=pattern
-	input.oninput=()=>{
+	input.addEventListener('input', ()=>{
 		var v= input.value;
 		v=v.replace(new RegExp(pattern, 'g'), '');
 		if(v!==input.value){
 			input.value=v;
 		}
-	}
+	});
 });
 
 
@@ -697,6 +776,7 @@ SurveyRenderer.addItem('custom', (item, container, renderer, page) => {
 
 
 	var script=item.renderScript;
+	script=labelTemplate(script, renderer);
 
 	if(script){
 
