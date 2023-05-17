@@ -120,6 +120,7 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 	_setSourceBase(base) {
+		this._scriptIndex=0;
 		this._sourceBase = base;
 	}
 
@@ -491,8 +492,6 @@ export class SurveyRenderer extends EventEmitter {
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
-
-
 	_executeOnNavigationEntryLogic(data){
 
 		return ((formData, pageData, renderer) => {
@@ -555,7 +554,7 @@ export class SurveyRenderer extends EventEmitter {
 
 		this._push(data);
 
-		this._setSourceBase(data.name)
+		this._setSourceBase(data.name+'-'+data.uuid.substring(0, 5))
 
 		this._resetContext();
 
@@ -1027,7 +1026,7 @@ export class SurveyRenderer extends EventEmitter {
 	getSourceUrl() {
 
 
-		var path = (this._sourceBase || "page") + "/" + (this._sourceFile) + ".js?"
+		var path = (this._sourceBase || "page")+  "/" + (this._scriptIndex++) +'-'+(this._sourceFile) + ".js?"
 		path = path.split(' ').join('');
 
 		return '//# sourceURL=survey-runner://survey-items/scripts/' + path
