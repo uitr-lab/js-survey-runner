@@ -324,6 +324,7 @@ export class GoogleMap {
 				zoom: 14,
 				center: position,
 				mapId: "DEMO_MAP_ID",
+				gestureHandling:"greedy"
 			});
 
 			callback(map);
@@ -383,12 +384,26 @@ export class GeocodeFormat {
 				return place.address_components[i].short_name;
 			}
 
+			if (format === 'country' && place.address_components[i].types.indexOf('country') >= 0) {
+				return place.address_components[i].long_name;
+			}
+
 			if (format === 'province' && place.address_components[i].types.indexOf('administrative_area_level_1') >= 0) {
 				return place.address_components[i].long_name;
+			}
+			if (format === 'prov' && place.address_components[i].types.indexOf('administrative_area_level_1') >= 0) {
+				return place.address_components[i].short_name;
 			}
 
 			if (format === 'street_number' && place.address_components[i].types.indexOf('street_number') >= 0) {
 				return place.address_components[i].short_name;
+			}
+
+			if (format === 'full_address' && place.address_components[i].types.indexOf('route') >= 0) {
+
+				return this.format(place, 'address')+' '+
+					this.format(place, 'city')+', '+this.format(place, 'prov')+', '+this.format(place, 'country');
+
 			}
 
 			if (format === 'address' && place.address_components[i].types.indexOf('route') >= 0) {
