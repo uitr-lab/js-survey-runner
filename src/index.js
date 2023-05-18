@@ -269,6 +269,8 @@ SurveyRenderer.addFormatter('replace', (input, item, pattern, replace)=>{
 
 SurveyRenderer.addFormatter('geolocate', (input, item, format, renderer)=>{
 
+	input.classList.add('with-geolocate');
+
 	if(typeof renderer=="undefined"){
 		renderer=format;
 		format=null;
@@ -286,6 +288,8 @@ SurveyRenderer.addFormatter('geolocate', (input, item, format, renderer)=>{
 
 
 SurveyRenderer.addFormatter('map', (input, item, format, renderer)=>{
+
+	input.classList.add('with-map');
 
 	if(typeof renderer=="undefined"){
 		renderer=format;
@@ -312,6 +316,8 @@ SurveyRenderer.addFormatter('map', (input, item, format, renderer)=>{
 
 SurveyRenderer.addFormatter('geocode', (input, item, format, renderer)=>{
 	
+	input.classList.add('with-geocode');
+
 	if(typeof renderer=="undefined"){
 		renderer=format;
 		format=null;
@@ -328,6 +334,8 @@ SurveyRenderer.addFormatter('geocode', (input, item, format, renderer)=>{
 });
 
 SurveyRenderer.addFormatter('geocode.field', (input, item, field, format, renderer)=>{
+
+	input.classList.add('with-geocode-field');
 
 	if(typeof renderer=="undefined"){
 		renderer=format;
