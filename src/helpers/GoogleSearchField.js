@@ -61,7 +61,7 @@ export class GoogleSearchField {
 		}
 	}
 
-	addGeolocate(input) {
+	addGeolocateButton(input) {
 
 		if (navigator.geolocation) {
 
@@ -191,7 +191,7 @@ export class GoogleMap {
 
 	}
 
-	renderMapOverlay(input) {
+	addMapOverlayButton(input) {
 
 
 		try {

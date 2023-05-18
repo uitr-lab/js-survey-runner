@@ -282,7 +282,7 @@ SurveyRenderer.addFormatter('geolocate', (input, item, format, renderer)=>{
 		apiKey:renderer.getConfigValue('googleMapApiKey', ()=>{
 			console.error('missing renderer.setConfigValue("googleMapApiKey", "XYZ...")')
 		})
-	})).addGeolocate(input);
+	})).addGeolocateButton(input);
 
 });
 
@@ -309,7 +309,7 @@ SurveyRenderer.addFormatter('map', (input, item, format, renderer)=>{
 			console.error('missing renderer.setConfigValue("googleMapZoom", z)');
 			return 10;
 		})
-	})).renderMapOverlay(input);
+	})).addMapOverlayButton(input);
 
 });
 

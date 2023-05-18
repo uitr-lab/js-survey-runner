@@ -113,6 +113,8 @@ export class ListRender extends EventEmitter {
 
 	}
 
+
+
 	getItems() {
 		return this._previousItems.concat([this._currentItem], this._nextItems).filter((el) => {
 			return !!el;
@@ -197,6 +199,7 @@ export class ListRender extends EventEmitter {
 			"class": "add-item-btn",
 			events: {
 				click: (e) => {
+					e.stopPropagation();
 					e.preventDefault();
 
 					// if (this._nextItems.length > 0) {
@@ -212,6 +215,21 @@ export class ListRender extends EventEmitter {
 
 
 		return this;
+
+
+	}
+
+
+	removeItem(index){
+
+		var items=this.getItems();
+		
+		var itemAtIndex=items[index];
+
+
+		var itemsAfter=items.slice(index+1);
+		
+		
 
 
 	}
@@ -338,7 +356,12 @@ export class ListRender extends EventEmitter {
 			html: "Delete",
 			events: {
 				click: (e) => {
+
+					e.stopPropagation();
 					e.preventDefault();
+
+					this.removeItem(index);
+
 					this._throttleUpdate();
 				}
 			}
