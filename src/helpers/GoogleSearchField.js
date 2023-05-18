@@ -315,15 +315,19 @@ export class GoogleMap {
 			const position = GoogleMap._geolocation ? {
 				lat: GoogleMap._geolocation.coords.latitude,
 				lng: GoogleMap._geolocation.coords.longitude
-			} : {
-				lat: -25.344,
-				lng: 131.031
-			};
+			} : (
+
+				this._config.center || {
+					lat: -25.344,
+					lng: 131.031
+				}
+			);
 
 			var map = new google.maps.Map(div, {
-				zoom: 14,
+				zoom: this._config.zoom || 14,
 				center: position,
 				mapId: "DEMO_MAP_ID",
+				
 			});
 
 			callback(map);
@@ -332,7 +336,7 @@ export class GoogleMap {
 
 			map.addListener("click", (event) => {
 				this.placeMarkerAndPanTo(event.latLng, map);
-				this._location=event.latLng;
+				this._location = event.latLng;
 				div.parentNode.classList.add('has-location');
 			});
 

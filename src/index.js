@@ -296,7 +296,14 @@ SurveyRenderer.addFormatter('map', (input, item, format, renderer)=>{
 		emmiter:renderer,
 		format:format,
 		apiKey:renderer.getConfigValue('googleMapApiKey', ()=>{
-			console.error('missing renderer.setConfigValue("googleMapApiKey", "XYZ...")')
+			console.error('missing renderer.setConfigValue("googleMapApiKey", "XYZ...")');
+		}),
+		center:renderer.getConfigValue('googleMapCenter', ()=>{
+			console.error('missing renderer.setConfigValue("googleMapCenter", {lat:.., lng:...})');
+		}),
+		zoom:renderer.getConfigValue('googleMapZoom', ()=>{
+			console.error('missing renderer.setConfigValue("googleMapZoom", z)');
+			return 10;
 		})
 	})).renderMapOverlay(input);
 
