@@ -85,6 +85,28 @@ export class ListRender extends EventEmitter {
 
 	_getDataItem(itemEl, data) {
 
+
+		var dataRaw=this._getItemDataRaw(itemEl, data);
+		var dataset={};
+		Object.keys(dataRaw).forEach((name)=>{
+			var key = name;
+			if (this._datasetKeyFmt) {
+				key = this._datasetKeyFmt(key);
+			}
+			dataset[key] = dataRaw[name];
+
+		});
+
+		if (this._datasetFmt) {
+			dataset = this._datasetFmt(dataset);
+		}
+
+		return dataset;
+
+	}
+
+	_getItemDataRaw(itemEl, data) {
+
 		data = data || this._page.getContextData();
 
 
@@ -94,20 +116,11 @@ export class ListRender extends EventEmitter {
 
 			if (el.name) {
 				if (typeof data[el.name] != 'undefined') {
-
-					var key = el.name;
-					if (this._datasetKeyFmt) {
-						key = this._datasetKeyFmt(key);
-					}
-					dataset[key] = el.value;
+					dataset[el.name] = el.value;
 				}
 			}
 
 		});
-
-		if (this._datasetFmt) {
-			dataset = this._datasetFmt(dataset);
-		}
 
 		return dataset;
 
@@ -226,12 +239,64 @@ export class ListRender extends EventEmitter {
 		
 		var itemAtIndex=items[index];
 
+		this._removeItemData(itemAtIndex, index);
+		itemAtIndex.parentNode.removeChild(itemAtIndex);
+
+
+
 
 		var itemsAfter=items.slice(index+1);
+		itemsAfter.forEach((itemAfterEl, i)=>{
+			this._shiftItemData(itemAfterEl, index+i+1, index+i);
+		})
+		
+
+		itemsAfter.forEach((itemAfterEl, i)=>{
+			this._redrawItem(itemAfterEl, index+i-1);
+		});
 		
 		
 
+	}
 
+	_removeItemData(itemEl, index){
+
+		var dataset=this._getItemDataRaw(itemEl);
+		this._page.unsetContextData(Object.keys(dataset));
+
+	}
+	_shiftItemData(itemEl, currentIndex, newIndex){
+
+		var dataset=this._getItemDataRaw(itemEl);
+		var unsetKeys=Object.keys(dataset);
+		this._page.unsetContextData(unsetKeys);
+		var newDataset={};
+		Object.keys(dataset).forEach((key)=>{
+			newDataset[key.split(currentIndex).pop().join(currentIndex)+newIndex]=dataset[key];
+		});
+		this._page.setContextData(newDataset);
+
+	}
+
+	_redrawItem(itemEl, index){
+		this._page.withVariables({
+			"loopIndex": index
+		}, () => {
+			var activityEl = itemEl;
+
+			var returnVar = this._defaultRenderFn(activityEl);
+
+
+			if(!(returnVar instanceof Promise)){
+				returnVar=Promise.resolve(true);
+			}
+
+
+			returnVar.then(()=>{
+				this._addItemButtons(activityEl, index);
+			});
+
+		});
 	}
 
 	_addItem(then) {

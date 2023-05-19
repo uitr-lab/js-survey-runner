@@ -55,6 +55,14 @@ export class PageRenderer extends EventEmitter {
 		return this._renderer.getPageData();
 	}
 
+	unsetContextData(keys){
+		this._renderer.unsetPageData(keys);
+	}
+
+	setContextData(data){
+		this._renderer.setPageData(data);
+	}
+
 	withVariables(vars, cb) {
 		return this._renderer.withVariables(vars, cb);
 	}

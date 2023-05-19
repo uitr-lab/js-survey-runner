@@ -916,6 +916,19 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
+	unsetPageData(keys){
+
+		if(typeof keys=='string'){
+			keys=[keys];
+		}
+
+		keys.forEach((key)=>{
+			delete this._currentFormData()[key];
+		});
+		this.emit('update');
+
+	}
+
 
 	unsetFormValue(name) {
 
@@ -924,11 +937,22 @@ export class SurveyRenderer extends EventEmitter {
 		this.emit('update');
 
 	}
+
+	
+	setPageData(obj){
+		obj = JSON.parse(JSON.stringify(obj));
+		Object.keys(obj).forEach((name) => {
+			this._currentFormData()[name] = obj[name];
+		});
+		this.emit('update');
+
+	}
 	/**
 	 * @deprecated the wording if this implies form value but is setting page value
 	 */
 	appendFormValue(name, value) {
 
+	
 		value = JSON.parse(JSON.stringify(value));
 
 		this._currentFormData()[name] = this._currentFormData()[name] || [];
@@ -950,19 +974,8 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 
-	updateFormValues(obj) {
-
-		obj = JSON.parse(JSON.stringify(obj));
-
-
-		Object.keys(obj).forEach((name) => {
-			this._currentFormData()[name] = obj[name];
-		});
-
-
-
-		this.emit('update');
-
+	updateFormValues(obj){
+		this.setPageData(obj);
 	}
 
 	setFormData(obj) {
