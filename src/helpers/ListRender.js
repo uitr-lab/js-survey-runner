@@ -19,7 +19,7 @@ export class ListRender extends EventEmitter {
 		this._previousItems = [];
 		this._nextItems = [];
 		this._currentItem = null;
-		this._index = 0;
+		this._autoIndex = 0;
 
 
 
@@ -244,6 +244,14 @@ export class ListRender extends EventEmitter {
 
 
 
+		if(this._nextItems.indexOf(itemAtIndex)>=0){
+			this._nextItems.splice(this._nextItems.indexOf(itemAtIndex), 1);
+		}
+
+		if(this._previousItems.indexOf(itemAtIndex)>=0){
+			this._previousItems.splice(this._previousItems.indexOf(itemAtIndex), 1);
+		}
+		
 
 		var itemsAfter=items.slice(index+1);
 		itemsAfter.forEach((itemAfterEl, i)=>{
@@ -254,8 +262,25 @@ export class ListRender extends EventEmitter {
 		itemsAfter.forEach((itemAfterEl, i)=>{
 			this._redrawItem(itemAfterEl, index+i-1);
 		});
+
+		this._autoIndex--;
+
+		if(itemAtIndex==this._currentItem){
+			this._currentItem=null;
+
+			if(index<this.getItems().length){
+				this.setCurrentIndex(index);
+			}else{
+				this.setCurrentIndex(index-1);
+			}
+
+		}
 		
+
 		
+		// TODO:  set new current
+		// this._currentItem = allItems[index];
+		//this._previousItems = allItems.slice(0, index);
 
 	}
 
@@ -272,13 +297,17 @@ export class ListRender extends EventEmitter {
 		this._page.unsetContextData(unsetKeys);
 		var newDataset={};
 		Object.keys(dataset).forEach((key)=>{
-			newDataset[key.split(currentIndex).pop().join(currentIndex)+newIndex]=dataset[key];
+			newDataset[key.split(currentIndex).slice(0, -1).join(currentIndex)+newIndex]=dataset[key];
 		});
 		this._page.setContextData(newDataset);
 
 	}
 
 	_redrawItem(itemEl, index){
+
+		itemEl.innerHTML='';
+		//leave style, and attribute tags
+
 		this._page.withVariables({
 			"loopIndex": index
 		}, () => {
@@ -314,7 +343,7 @@ export class ListRender extends EventEmitter {
 
 
 		this._page.withVariables({
-			"loopIndex": this._index
+			"loopIndex": this._autoIndex
 		}, () => {
 			var activityEl = this._wrap.appendChild(new Element('div', {
 				"class": "active",
@@ -345,14 +374,14 @@ export class ListRender extends EventEmitter {
 
 
 				this._currentItem = activityEl;
-				this._addItemButtons(activityEl, this._index);
+				this._addItemButtons(activityEl, this._autoIndex);
 
 
 
 				this._throttleUpdate();
-				this.emit('addItem', this._currentItem, this._index);
+				this.emit('addItem', this._currentItem, this._autoIndex);
 
-				this._index++;
+				this._autoIndex++;
 
 
 				if(then){
