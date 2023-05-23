@@ -52,6 +52,9 @@ export class ListRender extends EventEmitter {
 		if (this._currentItem) {
 
 			Object.keys(this._currentItem.dataset).forEach((key) => {
+				if(key=='index'){
+					return;
+				}
 				delete this._currentItem.dataset[key];
 			});
 
@@ -242,8 +245,6 @@ export class ListRender extends EventEmitter {
 		this._removeItemData(itemAtIndex, index);
 		itemAtIndex.parentNode.removeChild(itemAtIndex);
 
-
-
 		if(this._nextItems.indexOf(itemAtIndex)>=0){
 			this._nextItems.splice(this._nextItems.indexOf(itemAtIndex), 1);
 		}
@@ -252,15 +253,13 @@ export class ListRender extends EventEmitter {
 			this._previousItems.splice(this._previousItems.indexOf(itemAtIndex), 1);
 		}
 		
-
 		var itemsAfter=items.slice(index+1);
 		itemsAfter.forEach((itemAfterEl, i)=>{
 			this._shiftItemData(itemAfterEl, index+i+1, index+i);
 		})
 		
-
 		itemsAfter.forEach((itemAfterEl, i)=>{
-			this._redrawItem(itemAfterEl, index+i-1);
+			this._redrawItem(itemAfterEl, index+i);
 		});
 
 		this._autoIndex--;
@@ -275,8 +274,6 @@ export class ListRender extends EventEmitter {
 			}
 
 		}
-		
-
 		
 		// TODO:  set new current
 		// this._currentItem = allItems[index];
@@ -308,6 +305,8 @@ export class ListRender extends EventEmitter {
 		itemEl.innerHTML='';
 		//leave style, and attribute tags
 
+		itemEl.dataset['index']=index;
+		
 		this._page.withVariables({
 			"loopIndex": index
 		}, () => {
@@ -322,7 +321,16 @@ export class ListRender extends EventEmitter {
 
 
 			returnVar.then(()=>{
+
+				/**
+				* this needs to be chained in a promise, if _defaultRenderFn returns one
+				*/
+				this._page.updateFormInputs(activityEl);
+
 				this._addItemButtons(activityEl, index);
+
+				this._throttleUpdate();
+				
 			});
 
 		});
@@ -355,6 +363,8 @@ export class ListRender extends EventEmitter {
 					}
 				}
 			}));
+
+			activityEl.dataset['index']=this._autoIndex;
 
 			var returnVar = this._defaultRenderFn(activityEl);
 

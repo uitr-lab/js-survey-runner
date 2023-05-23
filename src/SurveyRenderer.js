@@ -396,7 +396,14 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 	needsUpdate() {
-		this._update();
+		if(this._throttleUpdate){
+			clearTimeout(this._throttleUpdate);
+		}
+		this._trottleUpdate=setTimeout(()=>{
+			this._throttleUpdate=null;
+			this._update();
+		}, 100);
+		
 	}
 
 	_update() {
