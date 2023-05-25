@@ -336,24 +336,37 @@ export class ListRender extends EventEmitter {
 		});
 	}
 
-	_addItem(then) {
+	addItem(){
+		this._addItem();
+	}
 
+	insertItem(index){
+		this._insertItem(index);
+	}
 
+	_insertItem(index, then){
 
-		if (this._currentItem) {
+		var itemsBefore=this.getItems().slice(0, index);
+		var itemsAfter=this.getItems().slice(index);
 
-			this._previousItems = this.getItems();
-			this._nextItems = []
-			this._currentItem.classList.remove('active');
-			this._currentItem.classList.add('collapse');
+		this._previousItems=itemsBefore;
+		this._nextItems=itemsAfter;
 
-		}
-
+		/**
+		 * Start at the end - so as not to overwrite.
+		 */
+		itemsAfter.reverse().forEach((itemAfterEl, i)=>{
+			var fromIndex = index+(itemsAfter.length-i)-1;
+			var toIndex = index+(itemsAfter.length-i)
+			this._shiftItemData(itemAfterEl, fromIndex, toIndex);
+			this._redrawItem(itemAfterEl, toIndex);
+		});
+		
 
 		this._page.withVariables({
-			"loopIndex": this._autoIndex
+			"loopIndex": index
 		}, () => {
-			var activityEl = this._wrap.appendChild(new Element('div', {
+			var activityEl = new Element('div', {
 				"class": "active",
 				events: {
 					click: () => {
@@ -362,7 +375,13 @@ export class ListRender extends EventEmitter {
 						}
 					}
 				}
-			}));
+			});
+			if(itemsAfter.length>0){
+				itemsAfter[0].before(activityEl);
+			}else{
+				this._wrap.appendChild(activityEl);
+			}
+			
 
 			activityEl.dataset['index']=this._autoIndex;
 
@@ -382,14 +401,10 @@ export class ListRender extends EventEmitter {
 				*/
 				this._page.updateFormInputs(activityEl);
 
-
-				this._currentItem = activityEl;
-				this._addItemButtons(activityEl, this._autoIndex);
-
-
-
-				this._throttleUpdate();
-				this.emit('addItem', this._currentItem, this._autoIndex);
+				this._addItemButtons(activityEl, index);
+				this._currentItem=activityEl;
+				this.setCurrentIndex(index);
+				this.emit('addItem', activityEl, index);
 
 				this._autoIndex++;
 
@@ -402,6 +417,11 @@ export class ListRender extends EventEmitter {
 
 		});
 
+
+	}
+
+	_addItem(then) {
+		this.insertItem(this._autoIndex, then);
 	}
 
 
