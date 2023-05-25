@@ -14,7 +14,6 @@ import {
 
 export class SurveyRenderer extends EventEmitter {
 
-
 	constructor() {
 		super();
 
@@ -251,6 +250,13 @@ export class SurveyRenderer extends EventEmitter {
 			"class": "survey-view"
 		}));
 
+        if(this._hasTouchScreen()){
+			form.classList.add('touchscreen');
+		}else{
+			form.classList.add('desktop');
+		}
+			
+
 		form.addEventListener('focusin', (e)=>{
 
 			if(typeof e.target.name=='string'){
@@ -308,6 +314,12 @@ export class SurveyRenderer extends EventEmitter {
 			this._validate();
 		});
 
+	}
+
+	_hasTouchScreen(){
+		return 'ontouchstart' in document.documentElement
+         || navigator.maxTouchPoints > 0
+         || navigator.msMaxTouchPoints > 0;
 	}
 	_setForwardBtn(btn) {
 		this._forwardBtns = this._forwardBtns || [];
