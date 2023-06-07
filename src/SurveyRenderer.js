@@ -250,6 +250,10 @@ export class SurveyRenderer extends EventEmitter {
 			"class": "survey-view"
 		}));
 
+		form.onsubmit=()=>{
+			return false;
+		}
+
         if(this._hasTouchScreen()){
 			form.classList.add('touchscreen');
 		}else{
@@ -313,6 +317,12 @@ export class SurveyRenderer extends EventEmitter {
 			this._update();
 			this._validate();
 		});
+
+		form.addEventListener('input', (e) => {
+			this._needsLateUpdateValidate();
+		});
+
+		
 
 	}
 
@@ -382,13 +392,43 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	_validate() {
+	needsValidation(){
+
+		if(this._throttleValidation){
+			clearTimeout(this._throttleValidation);
+		}
+		this._throttleValidation=setTimeout(()=>{
+			this._throttleValidation=null;
+			this._validate({
+				"showNewWarnings":false
+			});
+		}, 100);
+	}
+
+
+	_needsLateUpdateValidate(){
+
+		if(this._throttleLateUpdate){
+			clearTimeout(this._throttleLateUpdate);
+		}
+		this._throttleValidation=setTimeout(()=>{
+			this._throttleLateUpdate=null;
+			this._update();
+			this.needsValidation();
+		}, 500);
+
+
+	}
+
+	_validate(opts) {
+
+		opts=opts||{};
 
 		Promise.all((this._validators || []).map((validator) => {
 
 			return new Promise((resolve, reject) => {
 
-				resolve(validator(this.getFormData(), this.getPageData()));
+				resolve(validator(this.getFormData(), this.getPageData(), opts));
 
 			});
 
@@ -428,7 +468,12 @@ export class SurveyRenderer extends EventEmitter {
 		(this._transforms || []).forEach((transform) => {
 			try {
 
-				transform();
+				var resp = transform(this._currentFormData());
+
+				if(!resp){
+					return;
+				}
+				renderer.setPageData(resp, pageData);
 
 			} catch (e) {
 				console.error(e);
@@ -438,6 +483,8 @@ export class SurveyRenderer extends EventEmitter {
 		this.emit('update');
 
 	}
+
+	
 
 	_findNode(uuid, data) {
 
@@ -958,12 +1005,18 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 	
-	setPageData(obj){
+	setPageData(obj, pageData){
+
+		pageData=pageData||this._currentFormData();
+
 		obj = JSON.parse(JSON.stringify(obj));
 		Object.keys(obj).forEach((name) => {
-			this._currentFormData()[name] = obj[name];
+			pageData[name] = obj[name];
 		});
-		this.emit('update');
+
+		if(pageData===this._currentFormData()){
+			this.emit('update');
+		}
 
 	}
 	/**
@@ -1102,6 +1155,7 @@ export class SurveyRenderer extends EventEmitter {
 			
 
 			this._update();
+			this.needsValidation();
 			this.emit('renderSet');
 			this.emit('renderPage');
 

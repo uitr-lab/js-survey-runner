@@ -147,6 +147,12 @@ export class ListRender extends EventEmitter {
 
 	}
 
+	getItemElement(index) {
+
+		return this.getItems()[index];
+
+	}
+
 	getItemInput(index, name) {
 
 		var itemEl = this.getItems()[index];
@@ -182,6 +188,7 @@ export class ListRender extends EventEmitter {
 		this._defaultRenderFn = defaultRenderFn;
 
 		opt = opt || {};
+		this.options=opt;
 
 
 		this._wrap = container.appendChild(this.getElement());
@@ -477,15 +484,18 @@ export class ListRender extends EventEmitter {
 
 		inlineNav.appendChild(new Element('button', {
 			"class": "remove-btn",
-			html: "Delete",
+			html: this.options.deleteLabel||"Delete",
 			events: {
 				click: (e) => {
 
 					e.stopPropagation();
 					e.preventDefault();
 
-					this.removeItem(index);
+					if(!confirm(this.options.confirmDeleteLabel||"Are you sure you want to delete this item?")){
+						return;
+					}
 
+					this.removeItem(index);
 					this._throttleUpdate();
 				}
 			}

@@ -343,6 +343,11 @@ export class GoogleMap {
 			});
 
 
+			map.addListener("bounds_changed", (event) => {
+				console.log(map.getCenter().toString()+' '+map.getZoom());
+			});
+
+
 		});
 
 

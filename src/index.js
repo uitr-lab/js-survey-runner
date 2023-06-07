@@ -48,10 +48,15 @@ import {
 	NavMenu
 } from './helpers/NavMenu.js'
 
+import {
+	DistinctChoice
+} from './helpers/DistinctChoice.js'
+
 window.FieldsetNavigation=FieldsetNavigation;
 window.FeedbackForm=FeedbackForm;
 window.FormDataStorage=FormDataStorage;
 window.NavMenu=NavMenu;
+window.DistinctChoice=DistinctChoice;
 
 
 const labelTemplate=(label, renderer)=>{
@@ -77,9 +82,11 @@ SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
 	var markdown= labelTemplate(item.text, renderer);
 	
 
+	var className=item.className||"";
+
 	var content = marked.parse(markdown);
 	container.appendChild(new Element('span', {
-		"class":"markdown",
+		"class":"markdown"+(className?" "+className:""),
 		html: content
 	}));
 
@@ -512,9 +519,16 @@ SurveyRenderer.addItem('qrcode', (item, container, renderer, page) => {
 	if(data){
 
 		data=labelTemplate(data, renderer);
+		var opts={};
+		if(item.size){
+			var size=parseInt(item.size);
+			if(size>=16){
+				opts.width=size;
+			}
+		}
 		
 		var qrcode=container.appendChild(new Element('span',{"class":"qr-code"}));
-		toDataURL(data).then((data)=>{ qrcode.innerHTML = '<img style="" src="'+data+'"/>'; }); 
+		toDataURL(data, opts).then((data)=>{ qrcode.innerHTML = '<img style="" src="'+data+'"/>'; }); 
 		
 
 	}
@@ -637,7 +651,7 @@ SurveyRenderer.addItem('validation', (item, container, renderer, page) => {
 
 		const validator = new Schema(data);
 
-		renderer.addValidator((formData, pageData)=>{
+		renderer.addValidator((formData, pageData, opts)=>{
 
 			return validator.validate(pageData).then(()=>{
 
@@ -650,7 +664,9 @@ SurveyRenderer.addItem('validation', (item, container, renderer, page) => {
 			}).catch(({ errors, fields })=>{
 
 				Object.keys(data).forEach((field)=>{
-					renderer.getInput(field).removeAttribute('data-validation-error');
+				    if(Object.keys(fields).indexOf(field)==-1){
+						renderer.getInput(field).removeAttribute('data-validation-error');
+					}
 				});
 				
 				var lastFocus=renderer.getPreviousTarget();
@@ -667,6 +683,10 @@ SurveyRenderer.addItem('validation', (item, container, renderer, page) => {
 							 */
 							return;
 						}
+					}
+
+					if(opts.showNewWarnings===false){
+						return;
 					}
 
 					input.setAttribute('data-validation-error',errors[i].message);
@@ -695,15 +715,15 @@ SurveyRenderer.addItem('transform', (item, container, renderer, page) => {
 		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
 
 
-		renderer.addTransform(()=>{
+		renderer.addTransform((pageData)=>{
 
-			var resp=((pageData, renderer, page)=>{ return eval(script)})( renderer.getPageData(), renderer, page);
+			/**
+			 * page data object reference is passed for direct updates
+			 */
 
-			if(!resp){
-				return;
-			}
+			return ((pageData, renderer, page)=>{ return eval(script)})( pageData, renderer, page);
 
-			renderer.updateFormValues(resp);
+			
 
 		});
 

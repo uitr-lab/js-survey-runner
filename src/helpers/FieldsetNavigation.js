@@ -20,6 +20,18 @@ export class FieldsetNavigation extends EventEmitter {
             options.showBack=true;
         }
 
+
+        this.on('navigation',()=>{
+
+            setTimeout(() => {
+                this._container.scrollTo(0, 0);
+                if (this._container.parentNode) {
+                    this._container.parentNode.scrollTo(0, 0);
+                }
+            }, 100);
+
+        });
+
         renderer.on('renderedNode', function (data, nodeEl) {
 
             if (!(options.pages === '*' || options.pages.indexOf(data.name) >= 0)) {
@@ -50,7 +62,7 @@ export class FieldsetNavigation extends EventEmitter {
                             allFieldsets[i].classList.remove('focus');
                             i--;
 
-                            //child list may change
+                            // child list may change
                             allFieldsets = Array.prototype.slice.call(nodeEl.querySelector('fieldset').parentNode.childNodes).filter(function (el) {
                                 return el.tagName.toLowerCase() == 'fieldset' || el.classList.contains('fieldset');
                             });
@@ -60,12 +72,15 @@ export class FieldsetNavigation extends EventEmitter {
                             }
 
                             if(i<0){
-                                //there is no remaining section becuase the last section is not displayed;
+                                //currently viewing the first section/fieldset
                                 renderer.back();
                                 return;
                             }
 
                             allFieldsets[i].classList.add('focus');
+
+                            
+                            this.emit('navigation');
 
                         }
                     }
@@ -85,7 +100,7 @@ export class FieldsetNavigation extends EventEmitter {
                         allFieldsets[i].classList.remove('focus');
                         i++;
 
-                        //child list may change
+                        // child list may change
                         allFieldsets = Array.prototype.slice.call(nodeEl.querySelector('fieldset').parentNode.childNodes).filter(function (el) {
                             return el.tagName.toLowerCase() == 'fieldset' || el.classList.contains('fieldset');
                         });
@@ -95,12 +110,14 @@ export class FieldsetNavigation extends EventEmitter {
                         }
 
                         if(i>=allFieldsets.length){
-                            //there is no remaining section becuase the last section is not displayed;
+                            // there is no remaining section becuase the last section is not displayed;
                             renderer.next();
                             return;
                         }
 
                         allFieldsets[i].classList.add('focus');
+
+                        this.emit('navigation');
 
                     }
                 }
