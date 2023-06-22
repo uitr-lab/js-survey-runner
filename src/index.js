@@ -77,9 +77,16 @@ const labelTemplate=(label, renderer)=>{
 
 SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
 
+	var text=item.text;
+    if(item.variableName){
+		var variableContent= labelTemplate("{{"+item.variableName+"|default('EMPTY')}}", renderer);
+		if(variableContent!=='EMPTY'){
+			text=variableContent;
+		}
+	}
 
 	
-	var markdown= labelTemplate(item.text, renderer);
+	var markdown= labelTemplate(text, renderer);
 	
 
 	var className=item.className||"";
