@@ -28,3 +28,7 @@ You can create a form/survey json definition, using the builder user interface a
 </script>
 
 ```
+
+## TODO
+ 
+  - Internal naming consistency: the names `node`, `section` and `page` are used and it is confusing and not consistent

@@ -299,8 +299,9 @@ export class SurveyRenderer extends EventEmitter {
 		}
 
 		if (definition.type == 'set' && definition.items) {
+
 			form.classList.add('set-view');
-			this._renderSet(definition);
+			this._renderPage(definition);
 
 		}
 
@@ -387,6 +388,9 @@ export class SurveyRenderer extends EventEmitter {
 			return el.name === name;
 		});
 
+		if(results.length==0){
+			return null;
+		}
 
 		return results[0].parentNode;
 
@@ -647,7 +651,7 @@ export class SurveyRenderer extends EventEmitter {
 			}));
 		}
 
-		this._renderSetNavigation(data, 0, node, (set) => {
+		this._renderPagesNavigationForNode(data, 0, node, (set) => {
 
 			if (data.nodes && data.nodes.length) {
 
@@ -716,6 +720,7 @@ export class SurveyRenderer extends EventEmitter {
 		
 		});
 
+		//TODO: remove this! 
 		this.emit('renderNode', data, node);
 
 
@@ -723,7 +728,7 @@ export class SurveyRenderer extends EventEmitter {
 
 
 
-	_renderSetNavigation(data, i, container,  complete) {
+	_renderPagesNavigationForNode(data, i, container,  complete) {
 
 		var items=data.items;
 
@@ -735,7 +740,7 @@ export class SurveyRenderer extends EventEmitter {
 
 		var set = container.appendChild(new Element('div'));
 
-		return this._renderSet(items[i], set).then(() => {
+		return this._renderPage(items[i], set).then(() => {
 
 
 
@@ -775,7 +780,7 @@ export class SurveyRenderer extends EventEmitter {
 
 							this._update();
 							set.parentNode.removeChild(set);
-							this._renderSetNavigation(data, --i, container, complete);
+							this._renderPagesNavigationForNode(data, --i, container, complete);
 						}
 					}
 				}))
@@ -841,7 +846,7 @@ export class SurveyRenderer extends EventEmitter {
 
 						this._update();
 						set.parentNode.removeChild(set);
-						this._renderSetNavigation(data, ++i, container, complete);
+						this._renderPagesNavigationForNode(data, ++i, container, complete);
 					}
 				}
 			})));
@@ -1129,7 +1134,7 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	_renderSet(data, container) {
+	_renderPage(data, container) {
 
 
 		container = container || this._element;
@@ -1156,8 +1161,8 @@ export class SurveyRenderer extends EventEmitter {
 
 			this._update();
 			this.needsValidation();
-			this.emit('renderSet');
-			this.emit('renderPage');
+			this.emit('renderSet', data);
+			this.emit('renderPage', data);
 
 		});
 

@@ -52,11 +52,16 @@ import {
 	DistinctChoice
 } from './helpers/DistinctChoice.js'
 
+import {
+	AutoValidator
+} from './helpers/AutoValidator.js'
+
 window.FieldsetNavigation=FieldsetNavigation;
 window.FeedbackForm=FeedbackForm;
 window.FormDataStorage=FormDataStorage;
 window.NavMenu=NavMenu;
 window.DistinctChoice=DistinctChoice;
+window.AutoValidator=AutoValidator;
 
 
 const labelTemplate=(label, renderer)=>{
