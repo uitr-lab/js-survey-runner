@@ -455,10 +455,19 @@ SurveyRenderer.addItem('option', (item, container, renderer, page) => {
 
 	}
 
-	container=container.appendChild(new Element('select',{
+	var select=container.appendChild(new Element('select',{
 		"name":fieldName
 	}));
+	var optionList=null;
+	var defaultPrintOptionItems=false;
+	if(renderer.getConfigValue('printOptionItems', defaultPrintOptionItems)){
+		optionList=container.appendChild(new Element('ul'));
+		optionList.appendChild(new Element('li',{
+			html:'<label>'+fieldName+' values: </label>'
+		}));
+	}
 
+	container=select;
 
 	container.appendChild(new Element('option',{
 		disabled:true,
@@ -466,12 +475,22 @@ SurveyRenderer.addItem('option', (item, container, renderer, page) => {
 		html:labelTemplate('select an option', renderer)
 	}));
 
+
+	
+
 	(new Options()).addStringFormatter((s)=>{ return labelTemplate(s, renderer); }).parseValueList(item, (option)=>{
 
+		var html=labelTemplate(option.label, renderer)
 		container.appendChild(new Element('option',{
 			value:option.value,
-			html:labelTemplate(option.label, renderer)
+			html:html
 		}))
+
+		if(optionList){
+			optionList.appendChild(new Element('li',{
+				html:html
+			}));
+		}
 
 	});
 
