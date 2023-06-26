@@ -36,6 +36,16 @@ export class FormDataStorage extends EventEmitter {
 					var loadData=localStorage.getItem(key);
 
 					if(loadData){
+
+						loadData=JSON.parse(loadData);
+
+						Object.keys(loadData).forEach((key)=>{
+							if(key.indexOf('_')===0){
+								//ignore config data
+								delete loadData[key];
+							}
+						})
+
 						renderer.setFormData(JSON.parse(loadData));
 					}
 
