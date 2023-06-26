@@ -133,7 +133,7 @@ SurveyRenderer.addItem('textfield', (item, container, renderer, page) => {
 	}
 
 	if (item.placeholder) {
-		input.setAttribute('placeholder', item.placeholder);
+		input.setAttribute('placeholder', labelTemplate(item.placeholder, renderer));
 	}
 
 	
@@ -163,7 +163,7 @@ SurveyRenderer.addItem('textarea', (item, container, renderer, page) => {
 	}
 
 	if (item.placeholder) {
-		input.setAttribute('placeholder', item.placeholder);
+		input.setAttribute('placeholder', labelTemplate(item.placeholder, renderer));
 	}
 
 });
