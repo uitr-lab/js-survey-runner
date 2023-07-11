@@ -64,10 +64,11 @@ window.DistinctChoice=DistinctChoice;
 window.AutoValidator=AutoValidator;
 
 
-const labelTemplate=(label, renderer)=>{
+const labelTemplate=(label, renderer, field)=>{
+	return renderer.formatLabel(label, field);
+}
 
-
-	label=renderer.localize(label);
+SurveyRenderer.setLabelFormatter((label, renderer, field)=>{
 
 	try{
 		return Twig.twig({
@@ -77,7 +78,10 @@ const labelTemplate=(label, renderer)=>{
 		console.error(e);
 		return label;
 	}
-}
+});
+
+
+
 
 
 SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
@@ -106,6 +110,9 @@ SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
 });
 
 
+SurveyRenderer.useFieldNamePrefixedParameterizer('_labels.')
+
+
 SurveyRenderer.addItem('textfield', (item, container, renderer, page) => {
 
 	var label = null;
@@ -115,7 +122,7 @@ SurveyRenderer.addItem('textfield', (item, container, renderer, page) => {
 	if (item.label) {
 		label = container.appendChild(new Element('label', {
 			for: fieldName,
-			html: '<span>'+labelTemplate(item.label, renderer)+'</span>'
+			html: '<span>'+labelTemplate(item.label, renderer, item)+'</span>'
 		}));
 
 	}
@@ -149,7 +156,7 @@ SurveyRenderer.addItem('textarea', (item, container, renderer, page) => {
 	if (item.label) {
 		label = container.appendChild(new Element('label', {
 			for: fieldName,
-			html: '<span>'+labelTemplate(item.label, renderer)+'</span>'
+			html: '<span>'+labelTemplate(item.label, renderer, item)+'</span>'
 		}));
 
 	}
@@ -380,7 +387,7 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer, page) => {
 
 		container=container.appendChild(new Element('label', {
 			for: fieldName,
-			html: labelTemplate(item.label, renderer)
+			html: labelTemplate(item.label, renderer, item)
 		}));
 
 	}
@@ -414,7 +421,7 @@ SurveyRenderer.addItem('radio', (item, container, renderer, page) => {
 
 		container.appendChild(new Element('label', {
 			for:fieldName,
-			html: labelTemplate(item.label, renderer)
+			html: labelTemplate(item.label, renderer, item)
 		}));
 
 	}
@@ -426,7 +433,7 @@ SurveyRenderer.addItem('radio', (item, container, renderer, page) => {
 		var radio = container.appendChild(new Element('label', {
 			"for":fieldName+"_"+option.value + "_",
 
-			html:labelTemplate(option.label, renderer)
+			html:labelTemplate(option.label, renderer, item)
 		}));
 
 		 radio.appendChild(new Element('input',{
@@ -455,7 +462,7 @@ SurveyRenderer.addItem('option', (item, container, renderer, page) => {
 	if(item.label){
 
 		container.appendChild(new Element('label', {
-			html: labelTemplate(item.label, renderer)
+			html: labelTemplate(item.label, renderer, item)
 		}));
 
 	}
@@ -485,7 +492,7 @@ SurveyRenderer.addItem('option', (item, container, renderer, page) => {
 
 	(new Options()).addStringFormatter((s)=>{ return labelTemplate(s, renderer); }).parseValueList(item, (option)=>{
 
-		var html=labelTemplate(option.label, renderer)
+		var html=labelTemplate(option.label, renderer, item)
 		container.appendChild(new Element('option',{
 			value:option.value,
 			html:html

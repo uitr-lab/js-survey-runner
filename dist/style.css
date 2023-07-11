@@ -134,12 +134,14 @@ form.survey-view nav button.disabled {
 }
 
 
-form.survey-view label[data-validation-error] {
+form.survey-view label[data-validation-error], 
+form.survey-view .option[data-validation-error] {
     color: #b71a37;
     font-weight:bold;
 }
 
-form.survey-view label[data-validation-error]:after {
+form.survey-view label[data-validation-error]:after, 
+form.survey-view .option[data-validation-error]:after  {
     content: attr(data-validation-error);
     text-indent: 5px;
     display: inline-block;

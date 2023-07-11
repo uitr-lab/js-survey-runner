@@ -46,7 +46,7 @@ export class FormDataStorage extends EventEmitter {
 							}
 						})
 
-						renderer.setFormData(JSON.parse(loadData));
+						renderer.setFormData(loadData);
 					}
 
 				}

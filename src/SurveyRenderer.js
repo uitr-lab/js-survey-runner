@@ -23,13 +23,7 @@ export class SurveyRenderer extends EventEmitter {
 		};
 
 		this.on('renderPage', (page) => {
-			setTimeout(() => {
-				this._container.scrollTo(0, 0);
-				if (this._container.parentNode) {
-					this._container.parentNode.scrollTo(0, 0);
-				}
-			}, 100);
-
+			this.scrollToTop();
 		})
 
 	}
@@ -167,6 +161,64 @@ export class SurveyRenderer extends EventEmitter {
 		}
 	}
 
+	static setLabelFormatter(fmt){
+
+		SurveyRenderer._labelFmt=fmt;
+		
+	}
+
+	formatLabel(label, field){
+
+		if(field&&field.label===label){
+			// auto parameterize field label only
+			label=this.parameterize(label, field);
+		}
+
+		label=this.localize(label);
+
+		if(SurveyRenderer._labelFmt){
+			return SurveyRenderer._labelFmt(label, this);
+		}
+
+		return label;
+
+	}
+
+	static setLabelParameterizer(pmtr){
+		SurveyRenderer._labelPmtr=pmtr;
+		
+	}
+
+	static useFieldNamePrefixedParameterizer(prefix){
+
+		SurveyRenderer.setLabelParameterizer((label, field, renderer)=>{
+
+			if(field.fieldName){
+				var variableContent= renderer.formatLabel("{{"+prefix+field.fieldName+"|default('EMPTY')}}");
+				if(variableContent!=='EMPTY'){
+					return variableContent;
+				}
+			}
+
+			return label;
+
+
+		});
+		
+
+	}
+
+
+	parameterize(label, field) {
+
+		if(SurveyRenderer._labelPmtr){
+			return SurveyRenderer._labelPmtr(label, field, this);
+		}
+
+
+		return label;
+	}
+
 	localize(label, from, to) {
 
 
@@ -218,6 +270,19 @@ export class SurveyRenderer extends EventEmitter {
 		this._render(definition, data);
 		return this._container;
 
+	}
+
+	getElement(){
+		return this._container;
+	}
+
+	scrollToTop(){
+		setTimeout(() => {
+			this._container.scrollTo(0, 0);
+			if (this._container.parentNode) {
+				this._container.parentNode.scrollTo(0, 0);
+			}
+		}, 100);
 	}
 
 	getPreviousTarget(){
@@ -409,13 +474,16 @@ export class SurveyRenderer extends EventEmitter {
 		}, 100);
 	}
 
+	needsUpdateValidation(){
+		return this._needsLateUpdateValidate();
+	}
 
 	_needsLateUpdateValidate(){
 
 		if(this._throttleLateUpdate){
 			clearTimeout(this._throttleLateUpdate);
 		}
-		this._throttleValidation=setTimeout(()=>{
+		this._throttleLateUpdate=setTimeout(()=>{
 			this._throttleLateUpdate=null;
 			this._update();
 			this.needsValidation();
@@ -440,12 +508,13 @@ export class SurveyRenderer extends EventEmitter {
 
 			console.log(results);
 			this.enableForwardNavigation();
-
+			this.emit('validation');
 
 		}).catch((errors) => {
 
 			console.log(errors);
 			this.disableForwardNavigation();
+			this.emit('failedValidation');
 
 		});
 
@@ -465,14 +534,48 @@ export class SurveyRenderer extends EventEmitter {
 	_update() {
 
 		var formDataObject = new FormData(this._element);
+
+		var data=this._currentFormData(); //object reference
+		
 		for (const key of formDataObject.keys()) {
-			this._currentFormData()[key] = formDataObject.get(key);
+			data[key] = formDataObject.get(key);
+			
+		}
+
+		Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el) => {
+			if (typeof el.name == 'string' && el.name!=="") {
+
+				/**
+				 * FormData does not include unselected radio fields, or selections 
+				 * but here we want the empty value to be set
+				 */
+
+				if(el.type==='radio'){
+					if(typeof data[el.name]=='undefined'){
+						data[el.name]='';
+					}
+				}
+
+				if(el.tagName==='SELECT'){
+					if(typeof data[el.name]=='undefined'){
+						data[el.name]='';
+					}
+				}
+
+
+			}		
+		})
+
+
+		for (const entry of formDataObject.entries()) {
+			console.log(entry);
+			
 		}
 
 		(this._transforms || []).forEach((transform) => {
 			try {
 
-				var resp = transform(this._currentFormData());
+				var resp = transform(data);
 
 				if(!resp){
 					return;
@@ -1176,7 +1279,7 @@ export class SurveyRenderer extends EventEmitter {
 
 
 
-			if (typeof el.name == 'string' && typeof data[el.name] != 'undefined') {
+			if (typeof el.name == 'string' && el.name != "" && typeof data[el.name] != 'undefined') {
 
 				if (el.type === 'checkbox') {
 					el.checked = data[el.name] === 'on';
@@ -1185,6 +1288,15 @@ export class SurveyRenderer extends EventEmitter {
 
 				if (el.type === 'radio') {
 					el.checked = data[el.name] === el.value;
+					return;
+				}
+
+				if(el.tagName==='SELECT'){
+
+					//carful not to set empty
+					if(data[el.name] === ''&&el.options[0].disabled){
+						el.options[0].selected='selected';
+					}
 					return;
 				}
 
