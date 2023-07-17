@@ -34,7 +34,12 @@ export class DistinctChoice extends EventEmitter {
                                 el2.classList.add('unchecked');
                                 setTimeout(()=>{
                                     el2.classList.remove('unchecked');
-                                }, 100)
+                                   
+                                }, 100);
+                                var data={};
+                                data[el2.name]='';
+                                renderer.setPageData(data);
+                                renderer.needsUpdate();
                             }
                         })
                     }

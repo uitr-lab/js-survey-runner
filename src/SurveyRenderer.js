@@ -194,7 +194,8 @@ export class SurveyRenderer extends EventEmitter {
 		SurveyRenderer.setLabelParameterizer((label, field, renderer)=>{
 
 			if(field.fieldName){
-				var variableContent= renderer.formatLabel("{{"+prefix+field.fieldName+"|default('EMPTY')}}");
+				var fieldName=field.fieldName.split('{').join('_').split('}').join('_');
+				var variableContent= renderer.formatLabel("{{"+prefix+fieldName+"|default('EMPTY')}}");
 				if(variableContent!=='EMPTY'){
 					return variableContent;
 				}
@@ -1296,8 +1297,9 @@ export class SurveyRenderer extends EventEmitter {
 					//carful not to set empty
 					if(data[el.name] === ''&&el.options[0].disabled){
 						el.options[0].selected='selected';
+						return;
 					}
-					return;
+					
 				}
 
 				el.value = data[el.name];

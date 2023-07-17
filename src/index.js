@@ -82,6 +82,7 @@ SurveyRenderer.setLabelFormatter((label, renderer, field)=>{
 
 
 
+SurveyRenderer.useFieldNamePrefixedParameterizer('_labels.');
 
 
 SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
@@ -110,7 +111,6 @@ SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
 });
 
 
-SurveyRenderer.useFieldNamePrefixedParameterizer('_labels.')
 
 
 SurveyRenderer.addItem('textfield', (item, container, renderer, page) => {
@@ -671,8 +671,17 @@ SurveyRenderer.addItem('style', (item, container, renderer, page) => {
 SurveyRenderer.addItem('label', (item, container, renderer, page) => {
 
 
+	var text=item.text;
+    if(item.variableName){
+		var variableContent= labelTemplate("{{"+item.variableName+"|default('EMPTY')}}", renderer);
+		if(variableContent!=='EMPTY'){
+			text=variableContent;
+		}
+	}
+
+
 	container.appendChild(new Element('label', {
-		html: labelTemplate(item.text, renderer)
+		html: labelTemplate(text, renderer)
 	}));
 
 
