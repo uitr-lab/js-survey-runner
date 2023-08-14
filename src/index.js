@@ -180,6 +180,14 @@ SurveyRenderer.addFormatter('time', (input, item)=>{
 	input.type='time'
 });
 
+SurveyRenderer.addFormatter('auto-email', (input, item)=>{
+	input.autocomplete='email'
+});
+
+SurveyRenderer.addFormatter('auto-tel', (input, item)=>{
+	input.autocomplete='tel'
+});
+
 SurveyRenderer.addFormatter('capitalize', (input, item)=>{
 	input.addEventListener('input',()=>{
 		input.value=input.value.toUpperCase();
@@ -308,7 +316,9 @@ SurveyRenderer.addFormatter('geolocate', (input, item, format, renderer)=>{
 		apiKey:renderer.getConfigValue('googleMapApiKey', ()=>{
 			console.error('missing renderer.setConfigValue("googleMapApiKey", "XYZ...")')
 		})
-	})).addGeolocateButton(input);
+	})).addGeolocateButton(input).on('geocode', ()=>{
+		renderer.needsUpdateValidation();
+	});
 
 });
 

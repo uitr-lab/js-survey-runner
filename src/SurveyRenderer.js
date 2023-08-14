@@ -581,7 +581,7 @@ export class SurveyRenderer extends EventEmitter {
 				if(!resp){
 					return;
 				}
-				renderer.setPageData(resp, pageData);
+				this.setPageData(resp, data);
 
 			} catch (e) {
 				console.error(e);
@@ -607,6 +607,33 @@ export class SurveyRenderer extends EventEmitter {
 
 		var matches = data.nodes.map((node) => {
 			return this._findNode(uuid, node);
+		}).filter((node) => {
+			return !!node;
+		});
+
+		if (matches.length == 0) {
+			return null;
+		}
+
+		return matches[0];
+	}
+
+	/**
+	 * Searches entire node tree (unlike findNextNodePrefix), but is less strict than _findNode
+	 */
+	_findNodePrefix(uuid, data) {
+
+		data = data || this._data;
+		if (data.uuid&&data.uuid.indexOf(uuid) === 0) {
+			return data;
+		}
+
+		if (!(data.nodes && data.nodes.length > 0)) {
+			return null;
+		}
+
+		var matches = data.nodes.map((node) => {
+			return this._findNodePrefix(uuid, node);
 		}).filter((node) => {
 			return !!node;
 		});
@@ -708,6 +735,18 @@ export class SurveyRenderer extends EventEmitter {
 		 */
 		
 		var node=this._findNextNodePrefix(uuid, this._data);
+
+		if(!node){
+			node=this._findNode(uuid, this._data);
+		}
+
+		if(!node){
+			node=this._findNodePrefix(uuid, this._data);
+		}
+
+		if(!node){
+			throw 'Unable to find node with uuid: '+uuid;
+		}
 		
 		this._element.innerHTML=''; //would like a nicer way to clear
 		this._executeOnNavigationExitLogic(this._stack[this._stack.length-1]);
@@ -734,6 +773,9 @@ export class SurveyRenderer extends EventEmitter {
 
 	_renderNode(data, container) {
 
+		if(!data){
+			throw 'Attempt to render null data';
+		}
 
 		this._push(data);
 
@@ -778,11 +820,21 @@ export class SurveyRenderer extends EventEmitter {
 						if (typeof index == 'string') {
 
 							nextNode = this._findNextNodePrefix(index, data) || this._findNode(index);
+							if(!nextNode){
+								//Node returned null, reset for the next block
+								nextNode=index;
+							}
 							//throw 'Not implemented: Navigation to node uuid';
 						}
 
 						if (typeof nextNode == 'string') {
+							//Must use full uuid, no prefix!
 							nextNode = this._findNode(nextNode);
+
+							if(!nextNode){
+								throw 'Unable to find node with uuid/index: '+index;
+							}
+
 							//throw 'Not implemented: Navigation to node uuid';
 						}
 
@@ -1023,13 +1075,21 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	fetchFormTextValue(name, url) {
+	fetchFormTextValue(name, url, options) {
 
-		return fetch(url, {
+		var opts={
 			mode: "no-cors", // no-cors, *cors, same-origin
 			cache: "no-cache",
 			credentials: "omit",
-		}).then((resp) => {
+		};
+
+		if(options){
+			Object.keys(options).forEach((o)=>{
+				opts[o]=options[o];
+			});
+		}
+
+		return fetch(url, opts).then((resp) => {
 
 			return resp.text();
 
@@ -1041,13 +1101,21 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	fetchFormValue(name, url) {
+	fetchFormValue(name, url, options) {
 
-		return fetch(url, {
+		var opts={
 			mode: "no-cors", // no-cors, *cors, same-origin
 			cache: "no-cache",
 			credentials: "omit",
-		}).then((resp) => {
+		};
+
+		if(options){
+			Object.keys(options).forEach((o)=>{
+				opts[o]=options[o];
+			});
+		}
+
+		return fetch(url, opts).then((resp) => {
 
 			return resp.json();
 
@@ -1060,13 +1128,21 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	fetchFormData(url) {
+	fetchFormData(url, options) {
 
-		return fetch(url, {
+		var opts={
 			mode: "no-cors", // no-cors, *cors, same-origin
 			cache: "no-cache",
 			credentials: "omit",
-		}).then((resp) => {
+		};
+
+		if(options){
+			Object.keys(options).forEach((o)=>{
+				opts[o]=options[o];
+			});
+		}
+
+		return fetch(url, opts).then((resp) => {
 
 			return resp.json();
 

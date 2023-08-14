@@ -32,6 +32,26 @@ export class AutoValidator extends EventEmitter {
                 }
 
                 keys.forEach((k)=>{
+
+                    if(options.optionalFields){
+                        if(options.optionalFields.filter((optional)=>{
+                            if(k===optional){
+                                return true;
+                            }
+
+                            if(optional[optional.length-1]==='*'){
+                                if(k.indexOf(optional.substring(0, optional.length-1))===0){
+                                    return true;
+                                }
+                            }
+
+                            return false;
+
+                        }).length>0){
+                            return;
+                        }
+                    }
+
                     data[k]={
                         type:"string",
                         required:true

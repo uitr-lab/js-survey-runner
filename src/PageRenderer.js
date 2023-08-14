@@ -47,6 +47,14 @@ export class PageRenderer extends EventEmitter {
 	}
 
 
+	hideNavigation(){
+		this._container.classList.add('hide-nav');
+	}
+
+	showNavigation(){
+		this._container.classList.remove('hide-nav');
+	}
+
 	getFormData(){
 		return this._renderer.getFormData();
 	}

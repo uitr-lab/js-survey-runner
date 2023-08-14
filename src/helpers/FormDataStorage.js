@@ -11,6 +11,7 @@ export class FormDataStorage extends EventEmitter {
 
 
 		var key='formData';
+		var currentKey=null;
 		var waitingForNamespace=false;
 
 		renderer.on('update', ()=>{
@@ -29,8 +30,9 @@ export class FormDataStorage extends EventEmitter {
 				key='formData.'+data[options.namespaceField];
 
 
-				if(waitingForNamespace){
-					waitingForNamespace=false;
+				if(waitingForNamespace&&key!==currentKey){
+					currentKey=key;
+					//waitingForNamespace=false;
 
 
 					var loadData=localStorage.getItem(key);

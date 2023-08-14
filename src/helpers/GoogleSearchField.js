@@ -45,9 +45,11 @@ class GoogleApiLoader extends EventEmitter {
 
 
 
-export class GoogleSearchField {
+export class GoogleSearchField extends EventEmitter{
 
 	constructor(input, config) {
+
+		super();
 
 		if (typeof config == 'undefined' && !(input instanceof HTMLElement)) {
 			config = input;
@@ -109,8 +111,11 @@ export class GoogleSearchField {
 									}
 
 									if (this._config.emmiter) {
+										
 										this._config.emmiter.emit('geocode.' + input.name, results[0], input.value);
 									}
+
+									this.emit('geocode', input.name, results[0], input.value);
 
 									if (this._config.format) {
 										(new GeocodeFormat()).applyFormat(input, results[0], this._config.format, input.value);
@@ -139,7 +144,7 @@ export class GoogleSearchField {
 
 		}
 
-
+		return this;
 
 	}
 
