@@ -17,9 +17,9 @@ export class SurveyRenderer extends EventEmitter {
 	constructor() {
 		super();
 
-		this._options={
-			completeLabel:"Complete",
-			completePageHtml:"Complete! Thank you.",
+		this._options = {
+			completeLabel: "Complete",
+			completePageHtml: "Complete! Thank you.",
 		};
 
 		this.on('renderPage', (page) => {
@@ -29,12 +29,12 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 
-	getConfigValue(key, defaultValue){
+	getConfigValue(key, defaultValue) {
 
-		var config=this._config||{};
-		if(typeof config[key]=='undefined'){
+		var config = this._config || {};
+		if (typeof config[key] == 'undefined') {
 
-			if(typeof defaultValue=='function'){
+			if (typeof defaultValue == 'function') {
 				return defaultValue();
 			}
 			return defaultValue;
@@ -44,36 +44,36 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	setConfigValue(key, value){
+	setConfigValue(key, value) {
 
-		this._config=this._config||{};
-		this._config[key]=value;
+		this._config = this._config || {};
+		this._config[key] = value;
 
 		return this;
 	}
 
-	getLabelFor(...args){
+	getLabelFor(...args) {
 
 
-		var key=args.shift();
-		var defaultValue=args.pop();
+		var key = args.shift();
+		var defaultValue = args.pop();
 
-		var data={};
+		var data = {};
 
-		args.forEach((arg)=>{
-			if(arg[key]){
-				data[key]=arg[key];
+		args.forEach((arg) => {
+			if (arg[key]) {
+				data[key] = arg[key];
 			}
 		});
 
 
-		return data[key]||this._options[key]||defaultValue;
+		return data[key] || this._options[key] || defaultValue;
 	}
 
 
-	setOptions(opt){
+	setOptions(opt) {
 
-		this._options=opt;
+		this._options = opt;
 
 	}
 
@@ -113,7 +113,7 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 	_setSourceBase(base) {
-		this._scriptIndex=0;
+		this._scriptIndex = 0;
 		this._sourceBase = base;
 	}
 
@@ -128,11 +128,11 @@ export class SurveyRenderer extends EventEmitter {
 	getFormatter(name) {
 		return (...args) => {
 
-			if(name.indexOf('|')>0){
-				var chain=name.split('|');
+			if (name.indexOf('|') > 0) {
+				var chain = name.split('|');
 
-				var returnVal=null;
-				while(chain.length>0){
+				var returnVal = null;
+				while (chain.length > 0) {
 					this.getFormatter(chain.shift()).apply(null, args);
 				}
 
@@ -141,42 +141,42 @@ export class SurveyRenderer extends EventEmitter {
 			}
 
 
-			if(name.indexOf('(')>0){
+			if (name.indexOf('(') > 0) {
 
-				try{
+				try {
 					var extraArgs = name.split('(', 2).pop();
-					extraArgs=JSON.parse('['+extraArgs.substring(0, extraArgs.length - 1)+']');
-					args=args.concat(extraArgs);
-				}catch(e){
+					extraArgs = JSON.parse('[' + extraArgs.substring(0, extraArgs.length - 1) + ']');
+					args = args.concat(extraArgs);
+				} catch (e) {
 					console.error(e);
 				}
 
 			}
 
 			name = name.split('(').shift();
-			
+
 			args.push(this);
 
 			return ((SurveyRenderer._formatters || {})[name] || (() => { })).apply(null, args);
 		}
 	}
 
-	static setLabelFormatter(fmt){
+	static setLabelFormatter(fmt) {
 
-		SurveyRenderer._labelFmt=fmt;
-		
+		SurveyRenderer._labelFmt = fmt;
+
 	}
 
-	formatLabel(label, field){
+	formatLabel(label, field) {
 
-		if(field&&field.label===label){
+		if (field && field.label === label) {
 			// auto parameterize field label only
-			label=this.parameterize(label, field);
+			label = this.parameterize(label, field);
 		}
 
-		label=this.localize(label);
+		label = this.localize(label);
 
-		if(SurveyRenderer._labelFmt){
+		if (SurveyRenderer._labelFmt) {
 			return SurveyRenderer._labelFmt(label, this);
 		}
 
@@ -184,19 +184,19 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	static setLabelParameterizer(pmtr){
-		SurveyRenderer._labelPmtr=pmtr;
-		
+	static setLabelParameterizer(pmtr) {
+		SurveyRenderer._labelPmtr = pmtr;
+
 	}
 
-	static useFieldNamePrefixedParameterizer(prefix){
+	static useFieldNamePrefixedParameterizer(prefix) {
 
-		SurveyRenderer.setLabelParameterizer((label, field, renderer)=>{
+		SurveyRenderer.setLabelParameterizer((label, field, renderer) => {
 
-			if(field.fieldName){
-				var fieldName=field.fieldName.split('{').join('_').split('}').join('_');
-				var variableContent= renderer.formatLabel("{{"+prefix+fieldName+"|default('EMPTY')}}");
-				if(variableContent!=='EMPTY'){
+			if (field.fieldName) {
+				var fieldName = field.fieldName.split('{').join('_').split('}').join('_');
+				var variableContent = renderer.formatLabel("{{" + prefix + fieldName + "|default('EMPTY')}}");
+				if (variableContent !== 'EMPTY') {
 					return variableContent;
 				}
 			}
@@ -205,14 +205,14 @@ export class SurveyRenderer extends EventEmitter {
 
 
 		});
-		
+
 
 	}
 
 
 	parameterize(label, field) {
 
-		if(SurveyRenderer._labelPmtr){
+		if (SurveyRenderer._labelPmtr) {
 			return SurveyRenderer._labelPmtr(label, field, this);
 		}
 
@@ -273,11 +273,11 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	getElement(){
+	getElement() {
 		return this._container;
 	}
 
-	scrollToTop(){
+	scrollToTop() {
 		setTimeout(() => {
 			this._container.scrollTo(0, 0);
 			if (this._container.parentNode) {
@@ -286,19 +286,19 @@ export class SurveyRenderer extends EventEmitter {
 		}, 100);
 	}
 
-	getPreviousTarget(){
-		return this._lastTarget||null;
+	getPreviousTarget() {
+		return this._lastTarget || null;
 	}
 
 	/**
 	 * returns the active (in focus) input element
 	 */
-	getCurrentTarget(){
-		return this._target||null;
+	getCurrentTarget() {
+		return this._target || null;
 	}
 
-	restart(){
-		this._container.innerHTML='';
+	restart() {
+		this._container.innerHTML = '';
 		this._render(this._data);
 	}
 
@@ -316,36 +316,36 @@ export class SurveyRenderer extends EventEmitter {
 			"class": "survey-view"
 		}));
 
-		form.onsubmit=()=>{
+		form.onsubmit = () => {
 			return false;
 		}
 
-        if(this._hasTouchScreen()){
+		if (this._hasTouchScreen()) {
 			form.classList.add('touchscreen');
-		}else{
+		} else {
 			form.classList.add('desktop');
 		}
-			
 
-		form.addEventListener('focusin', (e)=>{
 
-			if(typeof e.target.name=='string'){
-				if(this._target&&this._target!==this._lastTarget){
+		form.addEventListener('focusin', (e) => {
 
-					this._lastTarget=this._target;
+			if (typeof e.target.name == 'string') {
+				if (this._target && this._target !== this._lastTarget) {
+
+					this._lastTarget = this._target;
 					this.emit('unfocus', this._lastTarget);
 
 				}
-				this._target=e.target;
+				this._target = e.target;
 				this.emit('focus', this._target);
 				return;
 			}
 
-			if(this._target&&this._target!==this._lastTarget){
-				this._lastTarget=this._target;
+			if (this._target && this._target !== this._lastTarget) {
+				this._lastTarget = this._target;
 				this.emit('unfocus', this._lastTarget);
 			}
-			this._target=null;
+			this._target = null;
 		})
 
 		this._element = form;
@@ -389,14 +389,14 @@ export class SurveyRenderer extends EventEmitter {
 			this._needsLateUpdateValidate();
 		});
 
-		
+
 
 	}
 
-	_hasTouchScreen(){
+	_hasTouchScreen() {
 		return 'ontouchstart' in document.documentElement
-         || navigator.maxTouchPoints > 0
-         || navigator.msMaxTouchPoints > 0;
+			|| navigator.maxTouchPoints > 0
+			|| navigator.msMaxTouchPoints > 0;
 	}
 	_setForwardBtn(btn) {
 		this._forwardBtns = this._forwardBtns || [];
@@ -454,7 +454,7 @@ export class SurveyRenderer extends EventEmitter {
 			return el.name === name;
 		});
 
-		if(results.length==0){
+		if (results.length == 0) {
 			return null;
 		}
 
@@ -462,30 +462,30 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	needsValidation(){
+	needsValidation() {
 
-		if(this._throttleValidation){
+		if (this._throttleValidation) {
 			clearTimeout(this._throttleValidation);
 		}
-		this._throttleValidation=setTimeout(()=>{
-			this._throttleValidation=null;
+		this._throttleValidation = setTimeout(() => {
+			this._throttleValidation = null;
 			this._validate({
-				"showNewWarnings":false
+				"showNewWarnings": false
 			});
 		}, 100);
 	}
 
-	needsUpdateValidation(){
+	needsUpdateValidation() {
 		return this._needsLateUpdateValidate();
 	}
 
-	_needsLateUpdateValidate(){
+	_needsLateUpdateValidate() {
 
-		if(this._throttleLateUpdate){
+		if (this._throttleLateUpdate) {
 			clearTimeout(this._throttleLateUpdate);
 		}
-		this._throttleLateUpdate=setTimeout(()=>{
-			this._throttleLateUpdate=null;
+		this._throttleLateUpdate = setTimeout(() => {
+			this._throttleLateUpdate = null;
 			this._update();
 			this.needsValidation();
 		}, 500);
@@ -495,7 +495,7 @@ export class SurveyRenderer extends EventEmitter {
 
 	_validate(opts) {
 
-		opts=opts||{};
+		opts = opts || {};
 
 		Promise.all((this._validators || []).map((validator) => {
 
@@ -522,55 +522,55 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 	needsUpdate() {
-		if(this._throttleUpdate){
+		if (this._throttleUpdate) {
 			clearTimeout(this._throttleUpdate);
 		}
-		this._trottleUpdate=setTimeout(()=>{
-			this._throttleUpdate=null;
+		this._trottleUpdate = setTimeout(() => {
+			this._throttleUpdate = null;
 			this._update();
 		}, 100);
-		
+
 	}
 
 	_update() {
 
 		var formDataObject = new FormData(this._element);
 
-		var data=this._currentFormData(); //object reference
-		
+		var data = this._currentFormData(); //object reference
+
 		for (const key of formDataObject.keys()) {
 			data[key] = formDataObject.get(key);
-			
+
 		}
 
 		Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el) => {
-			if (typeof el.name == 'string' && el.name!=="") {
+			if (typeof el.name == 'string' && el.name !== "") {
 
 				/**
 				 * FormData does not include unselected radio fields, or selections 
 				 * but here we want the empty value to be set
 				 */
 
-				if(el.type==='radio'){
-					if(typeof data[el.name]=='undefined'){
-						data[el.name]='';
+				if (el.type === 'radio') {
+					if (typeof data[el.name] == 'undefined') {
+						data[el.name] = '';
 					}
 				}
 
-				if(el.tagName==='SELECT'){
-					if(typeof data[el.name]=='undefined'){
-						data[el.name]='';
+				if (el.tagName === 'SELECT') {
+					if (typeof data[el.name] == 'undefined') {
+						data[el.name] = '';
 					}
 				}
 
 
-			}		
+			}
 		})
 
 
 		for (const entry of formDataObject.entries()) {
 			console.log(entry);
-			
+
 		}
 
 		(this._transforms || []).forEach((transform) => {
@@ -578,7 +578,7 @@ export class SurveyRenderer extends EventEmitter {
 
 				var resp = transform(data);
 
-				if(!resp){
+				if (!resp) {
 					return;
 				}
 				this.setPageData(resp, data);
@@ -592,7 +592,7 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	
+
 
 	_findNode(uuid, data) {
 
@@ -618,13 +618,111 @@ export class SurveyRenderer extends EventEmitter {
 		return matches[0];
 	}
 
+	_searchNode(searchFn, data) {
+
+		data = data || this._data;
+		if (searchFn(data)) {
+			return data;
+		}
+
+		if (!(data.nodes && data.nodes.length > 0)) {
+			return null;
+		}
+
+		var matches = data.nodes.map((node) => {
+			return this._searchNode(searchFn, node);
+		}).filter((node) => {
+			return !!node;
+		});
+
+		if (matches.length == 0) {
+			return null;
+		}
+
+		return matches[0];
+	}
+
+	_getDataTemplateType(type, node) {
+
+		var found = null;
+
+		if(node.template&&node.type+'.'+node.template===type){
+			return node;
+		}
+
+		(node.items || []).forEach((block) => {
+
+			if(found){
+				return;
+			}
+
+			if (block.items) {
+				found = this._getDataTemplateType(type, block);
+				if(found){
+					return;
+				}
+			}
+		});
+
+
+		//only check current node;
+
+		// if(found){
+		// 	return found;
+		// }
+
+		// (node.nodes || []).forEach((child) => {
+		// 	if(found){
+		// 		return;
+		// 	}
+		// 	found = this._getDataTemplateType(type, child);
+		// });
+
+		return found;
+	}
+
+	searchRenderTemplate(item, container, pageRenderer){
+
+			/**
+			 * 
+			 */
+
+			var dataNode = this._searchNode((data) => {
+				return this._getDataTemplateType(item.type, data);
+			});
+
+			if(!dataNode){
+				throw 'Type not defined: ' + item.type
+			}
+			var dataItem = this._getDataTemplateType(item.type, dataNode);
+
+		
+
+
+			return new Promise((resolve) => {
+				
+				this._setSourceFile(dataItem.type);
+				resolve(PageRenderer._renderers[dataItem.type](dataItem, container, this, pageRenderer));
+
+			}).then(() => {
+
+				this._setSourceFile(item.type);
+				return PageRenderer._renderers[item.type](item, container, this, pageRenderer);
+
+			});
+
+
+			
+
+		}
+
 	/**
 	 * Searches entire node tree (unlike findNextNodePrefix), but is less strict than _findNode
 	 */
 	_findNodePrefix(uuid, data) {
 
-		data = data || this._data;
-		if (data.uuid&&data.uuid.indexOf(uuid) === 0) {
+			data = data || this._data;
+			if(data.uuid && data.uuid.indexOf(uuid) === 0) {
 			return data;
 		}
 
@@ -679,107 +777,116 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	_executeNavigationLogic(data){
+	_executeNavigationLogic(data) {
 
 		return ((formData, pageData, renderer) => {
-			return eval('(function(){ ' + "\n\n" + data.navigationLogic + "\n\n" + ' })()'+this.getSourceUrl('forwardNavigation'));
+			return eval('(function(){ ' + "\n\n" + data.navigationLogic + "\n\n" + ' })()' + this.getSourceUrl('forwardNavigation'));
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
-	_executeBackNavigationLogic(data){
+	_executeBackNavigationLogic(data) {
 
 		return ((formData, pageData, renderer) => {
-			return eval('(function(){ ' + "\n\n" + data.backLogic + "\n\n" + ' })()'+this.getSourceUrl('backNavigation'));
+			return eval('(function(){ ' + "\n\n" + data.backLogic + "\n\n" + ' })()' + this.getSourceUrl('backNavigation'));
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
-	_executeOnNavigationEntryLogic(data){
+	_executeOnNavigationEntryLogic(data) {
 
 		return ((formData, pageData, renderer) => {
-			return eval('(function(){ ' + "\n\n" + data.entryLogic + "\n\n" + ' })()'+this.getSourceUrl('entry'));
+			return eval('(function(){ ' + "\n\n" + data.entryLogic + "\n\n" + ' })()' + this.getSourceUrl('entry'));
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
-	_executeOnNavigationExitLogic(data){
+	_executeOnNavigationExitLogic(data) {
 
 		return ((formData, pageData, renderer) => {
-			return eval('(function(){ ' + "\n\n" + data.exitLogic + "\n\n" + ' })()'+this.getSourceUrl('exit'));
+			return eval('(function(){ ' + "\n\n" + data.exitLogic + "\n\n" + ' })()' + this.getSourceUrl('exit'));
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
-	_setNext(fn){
-		this._next=fn;
+	_setNext(fn) {
+		this._next = fn;
 		return this;
-	}	
+	}
 
-	next(){
+	next() {
 
-		var fn=this._next;
+		var fn = this._next;
 		delete this._next;
+
+		if (this._stack.length > 0) {
+			this.setFormValue('completed_' + this._stack.slice().pop().uuid, true);
+		}
+
 		fn();
 		return this;
 	}
 
-	_push(nodeData){
-		if(!this._stack){
-			this._stack=[];
+	_push(nodeData) {
+		if (!this._stack) {
+			this._stack = [];
 		}
 
 		this._stack.push(nodeData);
 	}
 
-	navigateTo(uuid){
+	navigateTo(uuid) {
 
 		/**
 		 * attempt to navigate using stack if possible
 		 */
-		
-		var node=this._findNextNodePrefix(uuid, this._data);
 
-		if(!node){
-			node=this._findNode(uuid, this._data);
+		var node = this._findNextNodePrefix(uuid, this._data);
+
+		if (!node) {
+			node = this._findNode(uuid, this._data);
 		}
 
-		if(!node){
-			node=this._findNodePrefix(uuid, this._data);
+		if (!node) {
+			node = this._findNodePrefix(uuid, this._data);
 		}
 
-		if(!node){
-			throw 'Unable to find node with uuid: '+uuid;
+		if (!node) {
+			throw 'Unable to find node with uuid: ' + uuid;
 		}
-		
-		this._element.innerHTML=''; //would like a nicer way to clear
-		this._executeOnNavigationExitLogic(this._stack[this._stack.length-1]);
+
+		this._element.innerHTML = ''; //would like a nicer way to clear
+		this._executeOnNavigationExitLogic(this._stack[this._stack.length - 1]);
 		this._renderNode(node);
 
 	}
 
-	hasBack(){
-		return this._stack&&this._stack.length>1;
+	hasBack() {
+		return this._stack && this._stack.length > 1;
 	}
 
-	back(){
+	back() {
 
-		var current=this._stack.pop();
+		var current = this._stack.pop();
 
 
 		this._executeBackNavigationLogic(current);
 		this._executeOnNavigationExitLogic(current);
 
-		var last=this._stack.pop();
+		var last = this._stack.pop();
 		this._renderNode(last);
 
 	}
 
 	_renderNode(data, container) {
 
-		if(!data){
+		if (!data) {
 			throw 'Attempt to render null data';
 		}
 
 		this._push(data);
 
-		this._setSourceBase(data.name+'-'+data.uuid.substring(0, 5));
+
+		this.setFormValue('visited_' + data.uuid, true);
+
+
+		this._setSourceBase(data.name + '-' + data.uuid.substring(0, 5));
 
 		this._resetContext();
 
@@ -801,7 +908,8 @@ export class SurveyRenderer extends EventEmitter {
 
 			if (data.nodes && data.nodes.length) {
 
-				this._setNext(()=>{
+				this._setNext(() => {
+
 					this._update();
 
 					node.parentNode.removeChild(node);
@@ -809,6 +917,8 @@ export class SurveyRenderer extends EventEmitter {
 					var nextNode = data.nodes[0];
 
 					var index = this._executeNavigationLogic(data);
+
+
 
 					var handleIndex = (index) => {
 
@@ -820,9 +930,9 @@ export class SurveyRenderer extends EventEmitter {
 						if (typeof index == 'string') {
 
 							nextNode = this._findNextNodePrefix(index, data) || this._findNode(index);
-							if(!nextNode){
+							if (!nextNode) {
 								//Node returned null, reset for the next block
-								nextNode=index;
+								nextNode = index;
 							}
 							//throw 'Not implemented: Navigation to node uuid';
 						}
@@ -831,8 +941,8 @@ export class SurveyRenderer extends EventEmitter {
 							//Must use full uuid, no prefix!
 							nextNode = this._findNode(nextNode);
 
-							if(!nextNode){
-								throw 'Unable to find node with uuid/index: '+index;
+							if (!nextNode) {
+								throw 'Unable to find node with uuid/index: ' + index;
 							}
 
 							//throw 'Not implemented: Navigation to node uuid';
@@ -855,25 +965,25 @@ export class SurveyRenderer extends EventEmitter {
 				});
 
 				return new Element('button', {
-					"class":"section-next",
+					"class": "section-next",
 					html: this.getLabelFor('nextNodeLabel', data, data.items[0], 'Next'),
 					events: {
 						click: (e) => {
 
-							
+
 							e.stopPropagation();
 							e.preventDefault();
 							this.next();
 
-							
+
 						}
 					}
 				});
 			}
-		}).then(()=>{
-			
+		}).then(() => {
+
 			this.emit('renderedNode', data, node);
-		
+
 		});
 
 		//TODO: remove this! 
@@ -884,9 +994,9 @@ export class SurveyRenderer extends EventEmitter {
 
 
 
-	_renderPagesNavigationForNode(data, i, container,  complete) {
+	_renderPagesNavigationForNode(data, i, container, complete) {
 
-		var items=data.items;
+		var items = data.items;
 
 		this._disableForward = false;
 		delete this._validators;
@@ -902,11 +1012,11 @@ export class SurveyRenderer extends EventEmitter {
 
 			var nav = set.appendChild(new Element('nav'));
 
-			if(i==0&&this.hasBack()){
+			if (i == 0 && this.hasBack()) {
 
 				nav.appendChild(new Element('button', {
 					html: this.getLabelFor('backLabel', data, items[i], 'Back'),
-					"class":"section-back",
+					"class": "section-back",
 					events: {
 						click: (e) => {
 
@@ -927,7 +1037,7 @@ export class SurveyRenderer extends EventEmitter {
 
 				nav.appendChild(new Element('button', {
 					html: this.getLabelFor('backLabel', data, items[i], 'Back'),
-					"class":"page-back",
+					"class": "page-back",
 					events: {
 						click: (e) => {
 
@@ -948,9 +1058,9 @@ export class SurveyRenderer extends EventEmitter {
 					complete = complete();
 				}
 
-				if(!complete){
+				if (!complete) {
 
-					this._setNext(()=>{
+					this._setNext(() => {
 
 						this._update();
 						set.parentNode.removeChild(set);
@@ -959,17 +1069,17 @@ export class SurveyRenderer extends EventEmitter {
 						 * Still want to execute navigation logic, user can implement submit fn here
 						 */
 						/*var index = */this._executeNavigationLogic(data);
-						
+
 						this.emit('complete');
 						container.appendChild(new Element('h3', {
-							"class":"complete-page",
-							html: this._options.completePageHtml||"Complete! Thank you."
+							"class": "complete-page",
+							html: this._options.completePageHtml || "Complete! Thank you."
 						}))
 
 					});
 
 					complete = new Element('button', {
-						"class":"section-next section-complete",
+						"class": "section-next section-complete",
 						html: this.getLabelFor('completeLabel', data, items[i], 'Complete'),
 						events: {
 							click: (e) => {
@@ -977,13 +1087,13 @@ export class SurveyRenderer extends EventEmitter {
 								e.stopPropagation();
 								e.preventDefault();
 								this.next();
-								
+
 							}
 						}
 					});
 
 				}
-				
+
 
 
 				this._setForwardBtn(complete);
@@ -994,7 +1104,7 @@ export class SurveyRenderer extends EventEmitter {
 
 			this._setForwardBtn(nav.appendChild(new Element('button', {
 				html: this.getLabelFor('nextLabel', data, items[i], 'Next'),
-				"class":"page-next",
+				"class": "page-next",
 				events: {
 					click: (e) => {
 
@@ -1025,7 +1135,7 @@ export class SurveyRenderer extends EventEmitter {
 
 	async postFormData(url, options) {
 
-		let opts={
+		let opts = {
 			method: "POST", // *GET, POST, PUT, DELETE, etc.
 			mode: "same-origin", // no-cors, *cors, same-origin
 			cache: "no-store", // *default, no-cache, reload, force-cache, only-if-cached
@@ -1039,9 +1149,9 @@ export class SurveyRenderer extends EventEmitter {
 			body: JSON.stringify(this.getFormData()), // body data type must match "Content-Type" header
 		};
 
-		if(options){
-			Object.keys(options).forEach((o)=>{
-				opts[o]=options[o];
+		if (options) {
+			Object.keys(options).forEach((o) => {
+				opts[o] = options[o];
 			});
 		}
 
@@ -1077,15 +1187,15 @@ export class SurveyRenderer extends EventEmitter {
 
 	fetchFormTextValue(name, url, options) {
 
-		var opts={
+		var opts = {
 			mode: "no-cors", // no-cors, *cors, same-origin
 			cache: "no-cache",
 			credentials: "omit",
 		};
 
-		if(options){
-			Object.keys(options).forEach((o)=>{
-				opts[o]=options[o];
+		if (options) {
+			Object.keys(options).forEach((o) => {
+				opts[o] = options[o];
 			});
 		}
 
@@ -1103,15 +1213,15 @@ export class SurveyRenderer extends EventEmitter {
 
 	fetchFormValue(name, url, options) {
 
-		var opts={
+		var opts = {
 			mode: "no-cors", // no-cors, *cors, same-origin
 			cache: "no-cache",
 			credentials: "omit",
 		};
 
-		if(options){
-			Object.keys(options).forEach((o)=>{
-				opts[o]=options[o];
+		if (options) {
+			Object.keys(options).forEach((o) => {
+				opts[o] = options[o];
 			});
 		}
 
@@ -1130,15 +1240,15 @@ export class SurveyRenderer extends EventEmitter {
 
 	fetchFormData(url, options) {
 
-		var opts={
+		var opts = {
 			mode: "no-cors", // no-cors, *cors, same-origin
 			cache: "no-cache",
 			credentials: "omit",
 		};
 
-		if(options){
-			Object.keys(options).forEach((o)=>{
-				opts[o]=options[o];
+		if (options) {
+			Object.keys(options).forEach((o) => {
+				opts[o] = options[o];
 			});
 		}
 
@@ -1167,13 +1277,13 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	unsetPageData(keys){
+	unsetPageData(keys) {
 
-		if(typeof keys=='string'){
-			keys=[keys];
+		if (typeof keys == 'string') {
+			keys = [keys];
 		}
 
-		keys.forEach((key)=>{
+		keys.forEach((key) => {
 			delete this._currentFormData()[key];
 		});
 		this.emit('update');
@@ -1189,17 +1299,17 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	
-	setPageData(obj, pageData){
 
-		pageData=pageData||this._currentFormData();
+	setPageData(obj, pageData) {
+
+		pageData = pageData || this._currentFormData();
 
 		obj = JSON.parse(JSON.stringify(obj));
 		Object.keys(obj).forEach((name) => {
 			pageData[name] = obj[name];
 		});
 
-		if(pageData===this._currentFormData()){
+		if (pageData === this._currentFormData()) {
 			this.emit('update');
 		}
 
@@ -1209,7 +1319,7 @@ export class SurveyRenderer extends EventEmitter {
 	 */
 	appendFormValue(name, value) {
 
-	
+
 		value = JSON.parse(JSON.stringify(value));
 
 		this._currentFormData()[name] = this._currentFormData()[name] || [];
@@ -1231,7 +1341,7 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 
-	updateFormValues(obj){
+	updateFormValues(obj) {
 		this.setPageData(obj);
 	}
 
@@ -1307,7 +1417,7 @@ export class SurveyRenderer extends EventEmitter {
 	getSourceUrl(file) {
 
 
-		var path = (this._sourceBase || "page")+  "/" + (this._scriptIndex++) +'-'+(file||this._sourceFile) + ".js?"
+		var path = (this._sourceBase || "page") + "/" + (this._scriptIndex++) + '-' + (file || this._sourceFile) + ".js?"
 		path = path.split(' ').join('');
 
 		return '//# sourceURL=survey-runner://survey-items/scripts/' + path
@@ -1335,9 +1445,9 @@ export class SurveyRenderer extends EventEmitter {
 
 		return this.renderItems(data.items, container).then(() => {
 
-			
+
 			this.updateFormInputs(this._element);
-			
+
 
 			this._update();
 			this.needsValidation();
@@ -1349,9 +1459,9 @@ export class SurveyRenderer extends EventEmitter {
 
 	}
 
-	updateFormInputs(element){
+	updateFormInputs(element) {
 
-		var data=this.getPageData();
+		var data = this.getPageData();
 		Array.prototype.slice.call(element.querySelectorAll("*")).forEach((el) => {
 
 
@@ -1368,14 +1478,14 @@ export class SurveyRenderer extends EventEmitter {
 					return;
 				}
 
-				if(el.tagName==='SELECT'){
+				if (el.tagName === 'SELECT') {
 
 					//carful not to set empty
-					if(data[el.name] === ''&&el.options[0].disabled){
-						el.options[0].selected='selected';
+					if (data[el.name] === '' && el.options[0].disabled) {
+						el.options[0].selected = 'selected';
 						return;
 					}
-					
+
 				}
 
 				el.value = data[el.name];
@@ -1397,13 +1507,13 @@ export class SurveyRenderer extends EventEmitter {
 	withVariables(vars, cb) {
 
 		var original = {}
-		var target=this._formData;
+		var target = this._formData;
 		Object.keys(vars).forEach((k) => {
 			original[k] = target[k];
 			target[k] = vars[k];
 		});
 
-		var returnVar=cb();
+		var returnVar = cb();
 
 		Object.keys(vars).forEach((k) => {
 			if (typeof original[k] == 'undefined') {
@@ -1421,7 +1531,7 @@ export class SurveyRenderer extends EventEmitter {
 	withPageVariables(vars, cb) {
 
 		var original = {}
-		var target=this._currentFormData();
+		var target = this._currentFormData();
 		Object.keys(vars).forEach((k) => {
 			original[k] = target[k];
 			target[k] = vars[k];
@@ -1441,6 +1551,6 @@ export class SurveyRenderer extends EventEmitter {
 	}
 
 }
-SurveyRenderer.Element=Element;
+SurveyRenderer.Element = Element;
 
 window.SurveyRenderer = SurveyRenderer;
