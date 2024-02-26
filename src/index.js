@@ -29,8 +29,9 @@ import {
 } from './helpers/GoogleSearchField.js'
 
 
-import  Schema  from 'async-validator';
-
+import {
+	SchemaValidator
+} from './helpers/SchemaValidator.js'
 
 import {
 	FieldsetNavigation
@@ -56,12 +57,14 @@ import {
 	AutoValidator
 } from './helpers/AutoValidator.js'
 
+
 window.FieldsetNavigation=FieldsetNavigation;
 window.FeedbackForm=FeedbackForm;
 window.FormDataStorage=FormDataStorage;
 window.NavMenu=NavMenu;
 window.DistinctChoice=DistinctChoice;
 window.AutoValidator=AutoValidator;
+window.SchemaValidator=SchemaValidator;
 
 
 const labelTemplate=(label, renderer, field)=>{
@@ -102,10 +105,14 @@ SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
 	var className=item.className||"";
 
 	var content = marked.parse(markdown);
-	container.appendChild(new Element('span', {
+	var markdownEl=container.appendChild(new Element('span', {
 		"class":"markdown"+(className?" "+className:""),
 		html: content
 	}));
+
+	if((!content)||content===""){
+		markdownEl.classList.add('empty');
+	}
 
 
 });
@@ -178,6 +185,10 @@ SurveyRenderer.addItem('textarea', (item, container, renderer, page) => {
 
 SurveyRenderer.addFormatter('time', (input, item)=>{
 	input.type='time'
+});
+
+SurveyRenderer.addFormatter('date', (input, item)=>{
+	input.type='date'
 });
 
 SurveyRenderer.addFormatter('auto-email', (input, item)=>{
@@ -382,6 +393,7 @@ SurveyRenderer.addFormatter('geocode.field', (input, item, field, format, render
 	
 	renderer.on('geocode.'+field, (place, value)=>{
 		(new GeocodeFormat()).applyFormat(input, place, format, value);
+		renderer.needsUpdateValidation();
 	});
 
 });
@@ -700,63 +712,7 @@ SurveyRenderer.addItem('label', (item, container, renderer, page) => {
 
 SurveyRenderer.addItem('validation', (item, container, renderer, page) => {
 
-
-	var data=JSON.parse(item.data);
-	if(data){
-
-		var validationEl=container.appendChild(new Element('span', {"class":"validation"}));
-
-		const validator = new Schema(data);
-
-		renderer.addValidator((formData, pageData, opts)=>{
-
-			return validator.validate(pageData).then(()=>{
-
-
-				Object.keys(data).forEach((field)=>{
-					renderer.getInput(field).removeAttribute('data-validation-error');
-				});
-
-
-			}).catch(({ errors, fields })=>{
-
-				Object.keys(data).forEach((field)=>{
-				    if(Object.keys(fields).indexOf(field)==-1){
-						renderer.getInput(field).removeAttribute('data-validation-error');
-					}
-				});
-				
-				var lastFocus=renderer.getPreviousTarget();
-				var currentFocus=renderer.getCurrentTarget();
-
-				Object.keys(fields).forEach((field ,i)=>{
-
-
-					var input=renderer.getInput(field);
-					if(currentFocus){
-						if(currentFocus.compareDocumentPosition(input)===4){
-							/**
-							 * for all inputs after the current target do not add error indicators
-							 */
-							return;
-						}
-					}
-
-					if(opts.showNewWarnings===false){
-						return;
-					}
-
-					input.setAttribute('data-validation-error',errors[i].message);
-				});
-
-				throw {errors:errors, fields:fields};
-
-			});
-
-		})
-
-	}
-
+	(new SchemaValidator(renderer)).addItemValidator(item, container, page);
 
 });
 
