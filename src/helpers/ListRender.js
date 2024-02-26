@@ -185,6 +185,7 @@ export class ListRender extends EventEmitter {
 
 	renderList(defaultRenderFn, container, opt) {
 
+
 		this._defaultRenderFn = defaultRenderFn;
 
 		opt = opt || {};
@@ -202,7 +203,7 @@ export class ListRender extends EventEmitter {
 			var name=inputs[0].name.replace(/\d+$/, "");
 			
 			
-			while(typeof data[name+i]!='undefined'){
+			if(typeof data[name+i]!='undefined'){
 				i++;
 				this._addItem(addInitialItems);
 			}
@@ -428,7 +429,7 @@ export class ListRender extends EventEmitter {
 	}
 
 	_addItem(then) {
-		this.insertItem(this._autoIndex, then);
+		this._insertItem(this._autoIndex, then);
 	}
 
 
