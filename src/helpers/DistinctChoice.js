@@ -43,7 +43,12 @@ export class DistinctChoice extends EventEmitter {
                             }
                         })
                     }
+                });
+
+                el.addEventListener('click', (e)=>{
+                    
                 })
+
             })
 
         })
