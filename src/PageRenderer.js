@@ -97,6 +97,11 @@ export class PageRenderer extends EventEmitter {
 
 		}
 
+
+		if(item.type.indexOf('template.')===0){
+			return this._renderer.searchRenderTemplate(item, container, this);
+		}
+
 		throw 'Type not defined: ' + item.type
 
 
