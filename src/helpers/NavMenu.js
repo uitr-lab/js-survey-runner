@@ -1,7 +1,6 @@
 import  { EventEmitter } from  'events';
 
 
-
 export class NavMenu extends EventEmitter {
 
 
@@ -9,10 +8,13 @@ export class NavMenu extends EventEmitter {
 
 		super();
 		this._renderer=renderer;
-
+		this._requireVisited=false;
 	 }
 
-
+	 requireVisited(){
+		this._requireVisited=true;
+		return this;
+	 }
 
 	 linkExistingMenu(selector, options){
 
@@ -29,16 +31,38 @@ export class NavMenu extends EventEmitter {
 						}
 
 						var uuid=options.nodeIds[index];
+						if(typeof uuid=='function'){
+							uuid=uuid(menuItem, index);
+						}
+						menuItem.setAttribute('data-uuid-target', uuid||'no-uuid');
 
 						if(!uuid){
+							menuItem.classList.add('invalid-uuid');
 							return;
 						}
 
+						var data=this._renderer.getFormData();
+
+
+						var completedKey=null;
+						Object.keys(data).forEach((key)=>{
+							if(key.indexOf('visited_'+uuid)===0){
+								completedKey=key;
+							}
+						});
+
+						if(completedKey){
+							menuItem.classList.add('visited');
+						}else{
+							menuItem.classList.add('unvisited');
+							return;
+						}
 
 						menuItem.classList.add('with-navigation');
 
 						menuItem.addEventListener('click', ()=>{
 
+							this.emit('select', menuItem, uuid, index);
 							this._renderer.navigateTo(uuid);
 
 						});
@@ -49,6 +73,8 @@ export class NavMenu extends EventEmitter {
 			
 		});
 	 
+
+		return this;
 
 	 }
 
