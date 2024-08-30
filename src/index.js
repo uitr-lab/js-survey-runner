@@ -191,6 +191,10 @@ SurveyRenderer.addFormatter('date', (input, item)=>{
 	input.type='date'
 });
 
+SurveyRenderer.addFormatter('month', (input, item)=>{
+	input.type='month'
+});
+
 SurveyRenderer.addFormatter('auto-email', (input, item)=>{
 	input.autocomplete='email'
 });
