@@ -88,7 +88,9 @@ export class PageRenderer extends EventEmitter {
 			try {
 
 				this._renderer._setSourceFile(item.type);
-				return PageRenderer._renderers[item.type](item, container, this._renderer, this);
+				var item = PageRenderer._renderers[item.type](item, container, this._renderer, this);
+				
+				return item;
 			} catch (e) {
 				console.error(e);
 				this._renderer.appendFormValue('errors', e.message);
