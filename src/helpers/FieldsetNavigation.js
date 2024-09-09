@@ -34,14 +34,47 @@ export class FieldsetNavigation extends EventEmitter {
             }
 
 
-            var allFieldsets = Array.prototype.slice.call(nodeEl.querySelector('fieldset').parentNode.childNodes).filter( (el) => {
-                return el.tagName.toLowerCase() == 'fieldset' || el.classList.contains('fieldset');
-            });
+            var defaultGetFieldsets=()=>{
 
-            allFieldsets[0].classList.add('first-focus');
+                var allFieldsets = Array.prototype.slice.call(nodeEl.querySelector('fieldset').parentNode.childNodes).filter( (el) => {
+                    return el.tagName.toLowerCase() == 'fieldset' || el.classList.contains('fieldset');
+                });
+
+                return allFieldsets;
+            }
+
+            
+
+            var getFieldsets=()=>{
+
+                if(options.getFieldsets){
+                    /*
+                    * Caller can define method to get fieldsets
+                    */
+                    var fieldsets = options.getFieldsets(data, nodeEl, defaultGetFieldsets);
+                }else{
+                    var fieldsets =  defaultGetFieldsets();
+                }
+
+                fieldsets.forEach((fieldset)=>{
+                    fieldset.classList.add('fieldset-nav-target');
+                });
+
+                return fieldsets;
+
+            }
+
+            var allFieldsets=getFieldsets();
+            
 
 
             var i = 0;
+
+            while (i<allFieldsets.length&&window.getComputedStyle(allFieldsets[i]).display === "none") {
+                i++;
+            }
+
+            allFieldsets[i].classList.add('first-focus');
             allFieldsets[i].classList.add('focus');
 
             if(options.showBack){
@@ -58,9 +91,7 @@ export class FieldsetNavigation extends EventEmitter {
                             i--;
 
                             // child list may change
-                            allFieldsets = Array.prototype.slice.call(nodeEl.querySelector('fieldset').parentNode.childNodes).filter( (el) => {
-                                return el.tagName.toLowerCase() == 'fieldset' || el.classList.contains('fieldset');
-                            });
+                            allFieldsets = getFieldsets();
 
                             while (i>=0&&window.getComputedStyle(allFieldsets[i]).display === "none") {
                                 i--;
@@ -96,9 +127,7 @@ export class FieldsetNavigation extends EventEmitter {
                         i++;
 
                         // child list may change
-                        allFieldsets = Array.prototype.slice.call(nodeEl.querySelector('fieldset').parentNode.childNodes).filter( (el) => {
-                            return el.tagName.toLowerCase() == 'fieldset' || el.classList.contains('fieldset');
-                        });
+                        allFieldsets = getFieldsets();
 
                         while (i<allFieldsets.length&&window.getComputedStyle(allFieldsets[i]).display === "none") {
                             i++;
