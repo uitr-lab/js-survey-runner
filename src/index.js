@@ -411,14 +411,22 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer, page) => {
 
 	if(item.label){
 
-		container=container.appendChild(new Element('label', {
-			for: fieldName,
+		var label=container.appendChild(new Element('label', {
+			//for: fieldName, // for doesn't work unless id's match but nesting checkbox in the label works
 			html: labelTemplate(item.label, renderer, item)
 		}));
 
+		if(item.showYesNo==="on"){
+		
+			label=container.appendChild(new Element('label', {
+				//for: fieldName, // for doesn't work unless id's match but nesting checkbox in the label works
+				html: labelTemplate(item.trueLabel, renderer, item)
+			}));
+		}
+
 	}
 
-	var checkbox=container.appendChild(new Element('input', {
+	var checkbox=label.appendChild(new Element('input', {
 		type:"checkbox",
 		checked:!!item.checked,
 		name:fieldName
@@ -426,9 +434,39 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer, page) => {
 
 	checkbox.addEventListener('change',()=>{
 		if(!checkbox.checked){
-			renderer.updateFormValue(item.fieldName, "off");
+			renderer.updateFormValue(fieldName, "off");
 		}
 	});
+
+
+	if(item.showYesNo==="on"){
+		var labelForNo=container.appendChild(new Element('label', {
+			//for: fieldName, // for doesn't work unless id's match but nesting checkbox in the label works
+			html: labelTemplate(item.falseLabel, renderer, item)
+		}));
+
+		var checkboxNo=labelForNo.appendChild(new Element('input', {
+			type:"checkbox",
+			//checked:!item.checked //don't automatically check this until first interaction
+		}));
+
+		if(renderer.getFormValue(fieldName)==="off"){
+			checkboxNo.checked=true;
+		}
+
+		checkbox.addEventListener('change',()=>{
+			checkboxNo.checked=!checkbox.checked;
+		});
+		checkboxNo.addEventListener('change',()=>{
+
+			checkbox.checked=!checkboxNo.checked;
+			if(!checkbox.checked){
+				renderer.updateFormValue(fieldName, "off");
+			}
+			
+			
+		});
+	}
 
 
 });
@@ -869,6 +907,8 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer, page) => {
 
 			if(result===false){
 				fieldset.style.cssText='display:none;';
+				fieldset.classList.add('condition-false');
+				fieldset.classList.remove('condition-true');
 				return;
 			}
 
@@ -876,7 +916,8 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer, page) => {
 
 
 			fieldset.style.cssText='';
-			
+			fieldset.classList.remove('condition-false');
+			fieldset.classList.add('condition-true');
 
 		}
 
