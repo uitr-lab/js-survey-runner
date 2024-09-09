@@ -2,6 +2,7 @@ export class LoopRender {
 
 	constructor(page) {
 		this._page=page
+		// this._addButtons=[];
 	}
 
 	renderFieldValueCount(fieldName, defaultRenderFn, container){
@@ -51,12 +52,26 @@ export class LoopRender {
 		   
 		};
 
-
-		renderLoop();
+		//setTimeout(()=>{
+			//delay first render, so that caller has time to configure
+			renderLoop();
+		//}, 20);
 		this._page.on('update', renderLoop);
 
 
 		return this;
 
 	}
+	
+	// addButton(elOpt, onClick){
+
+	// 	this._addButtons.push((listEl)=>{
+	// 		var btn = listEl.appendChild(new Element('button', elOpt));
+	// 		btn.addEventListener('click', (e)=>{
+	// 			onClick(listEl)
+	// 		})
+	// 	})
+
+	// }
+	
 }
