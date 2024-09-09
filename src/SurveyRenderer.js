@@ -540,8 +540,18 @@ export class SurveyRenderer extends EventEmitter {
 
 		for (const key of formDataObject.keys()) {
 			data[key] = formDataObject.get(key);
-
 		}
+
+		// fix missing checkboxes:
+		Array.prototype.slice.call(this._element.querySelectorAll('input[type="checkbox"]')).forEach((cbx)=>{
+			var key=cbx.name;
+			if(typeof key == 'string' && key!==""){
+				if(typeof data[key]=='undefined'){
+					data[key]=""
+				}
+			}
+		});
+	
 
 		Array.prototype.slice.call(this._element.querySelectorAll("*")).forEach((el) => {
 			if (typeof el.name == 'string' && el.name !== "") {
