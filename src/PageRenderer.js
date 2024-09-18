@@ -32,7 +32,7 @@ export class PageRenderer extends EventEmitter {
 		};
 		renderer.on('update', updateListener);
 		this.on('remove', ()=>{
-			renderer.off('remove', updateListener)
+			renderer.off('update', updateListener)
 		});
 
 	}
@@ -89,7 +89,7 @@ export class PageRenderer extends EventEmitter {
 
 				this._renderer._setSourceFile(item.type);
 				var item = PageRenderer._renderers[item.type](item, container, this._renderer, this);
-				
+
 				return item;
 			} catch (e) {
 				console.error(e);
@@ -110,8 +110,8 @@ export class PageRenderer extends EventEmitter {
 	}
 
 
-	renderLoop(key, renderFn, container){
-		return (new LoopRender(this)).renderFieldValueCount(key, renderFn, container);
+	renderLoop(key, renderFn, container, options){
+		return (new LoopRender(this)).renderFieldValueCount(key, renderFn, container, options);
 	}
 
 	renderList(renderFn, container, options){
