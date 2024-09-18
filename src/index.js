@@ -12,11 +12,11 @@ import {
 } from 'marked'
 
 
-import Twig from 'twig';
+import Twig from 'twig'
 
 import {
 	toDataURL
-} from 'qrcode';
+} from 'qrcode'
 
 import {
 	Options
@@ -71,6 +71,12 @@ const labelTemplate=(label, renderer, field)=>{
 	return renderer.formatLabel(label, field);
 }
 
+Twig.extendFilter('values', function(value) {
+	return Object.keys(value).map((k)=>{
+		return value[k];
+	})
+});
+
 SurveyRenderer.setLabelFormatter((label, renderer, field)=>{
 
 	try{
@@ -112,6 +118,37 @@ SurveyRenderer.addItem('markdown', (item, container, renderer, page) => {
 
 	if((!content)||content===""){
 		markdownEl.classList.add('empty');
+	}
+
+
+
+	
+
+	if(item.updateContent){
+
+
+		var updateContent=()=>{
+			var markdown= labelTemplate(text, renderer);
+			var content = marked.parse(markdown);
+			markdownEl.innerHTML=content;
+		}
+
+
+		var throttleTimeout=null;
+
+		var throttleUpdateContent=()=>{
+			if(throttleTimeout){
+				clearTimeout(throttleTimeout);
+			}
+			throttleTimeout=setTimeout(()=>{
+				throttleTimeout=null;
+				updateContent();
+			}, 60);
+		};
+
+
+		page.on('update', throttleUpdateContent);
+
 	}
 
 
@@ -395,10 +432,20 @@ SurveyRenderer.addFormatter('geocode.field', (input, item, field, format, render
 
 	//capture geocode value/part from another field
 	
-	renderer.on('geocode.'+field, (place, value)=>{
+
+	var eventListener=(place, value)=>{
+
+		if(!renderer.getElement().contains(input)){
+			//console.log('stop listening!')
+			renderer.off('geocode.'+field, eventListener);
+			return;
+		}
+
 		(new GeocodeFormat()).applyFormat(input, place, format, value);
 		renderer.needsUpdateValidation();
-	});
+	}
+	
+	renderer.on('geocode.'+field, eventListener);
 
 });
 
@@ -921,8 +968,26 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer, page) => {
 
 		}
 
-		checkCondition();
-		renderer.on('update', checkCondition);
+		var throttleTimeout=null;
+		var throttleCheckCondition=()=>{
+
+			// if(!renderer.getElement().contains(fieldset)){
+			// 	//console.log('stop listening!')
+			// 	page.off('update', throttleCheckCondition);
+			// 	return;
+			// }
+
+			if(throttleTimeout){
+				clearTimeout(throttleTimeout);
+			}
+			throttleTimeout=setTimeout(()=>{
+				throttleTimeout=null;
+				checkCondition();
+			}, 30);
+		};
+
+		throttleCheckCondition();
+		page.on('update', throttleCheckCondition);
 
 	}
 
