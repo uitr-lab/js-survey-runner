@@ -231,7 +231,7 @@ export class ListRender extends EventEmitter {
 					// 	return;
 					// }
 
-					this._addItem();
+					this._addItemClick();
 
 				}
 			}
@@ -428,6 +428,10 @@ export class ListRender extends EventEmitter {
 
 	}
 
+	_addItemClick(){
+		// TODO add validation check
+		this._addItem();
+	}
 	_addItem(then) {
 		this._insertItem(this._autoIndex, then);
 	}
