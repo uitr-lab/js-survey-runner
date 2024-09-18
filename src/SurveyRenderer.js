@@ -316,6 +316,13 @@ export class SurveyRenderer extends EventEmitter {
 			"class": "survey-view"
 		}));
 
+
+		form.addEventListener('keydown', function(event) {
+			if (event.key === "Enter") {
+				event.preventDefault(); // Prevent form submission on Enter key press
+			}
+		});
+
 		form.onsubmit = () => {
 			return false;
 		}
@@ -492,6 +499,7 @@ export class SurveyRenderer extends EventEmitter {
 
 
 	}
+
 
 	_validate(opts) {
 
@@ -905,10 +913,10 @@ export class SurveyRenderer extends EventEmitter {
 		container = container || this._element;
 
 		var node = container.appendChild(new Element('main'));
-
+		var heading=null;
 		if (this._displayInfo) {
 
-			node.appendChild(new Element('h1', {
+			heading=node.appendChild(new Element('h1', {
 				"class": 'node-label',
 				html: data.name
 			}));
@@ -923,6 +931,9 @@ export class SurveyRenderer extends EventEmitter {
 					this._update();
 
 					node.parentNode.removeChild(node);
+					if (this._displayInfo) {
+						heading.parentNode.removeChild(heading);
+					}
 
 					var nextNode = data.nodes[0];
 
@@ -1344,8 +1355,12 @@ export class SurveyRenderer extends EventEmitter {
 
 		value = JSON.parse(JSON.stringify(value));
 
-		this._currentFormData()[name] = value;
+		if(this._currentFormData()[name] === value){
+			// skip update
+			return;
+		}
 
+		this._currentFormData()[name] = value;
 		this.emit('update');
 
 	}
@@ -1524,14 +1539,26 @@ export class SurveyRenderer extends EventEmitter {
 		});
 
 		var returnVar = cb();
+		var reset=()=>{
+			Object.keys(vars).forEach((k) => {
+				if (typeof original[k] == 'undefined') {
+					delete target[k];
+					return;
+				}
+				target[k] = original[k];
+			});
+		}
 
-		Object.keys(vars).forEach((k) => {
-			if (typeof original[k] == 'undefined') {
-				delete target[k];
-				return;
-			}
-			target[k] = original[k];
-		});
+		if(returnVar instanceof Promise){
+			returnVar.then((v)=>{
+				reset();
+				return v;
+			})
+		}else{
+			reset();
+		}
+
+		
 
 		return returnVar;
 
