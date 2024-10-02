@@ -37,6 +37,17 @@ export class PageRenderer extends EventEmitter {
 
 	}
 
+	getInput(field){
+		return this._renderer.getInput(field);
+	}
+
+	getRenderer(){
+		return this._renderer;
+	}
+
+	addValidator(validator){
+		this._renderer.addValidator(validator);
+	}
 
 	needsUpdate() {
 		this._renderer.needsUpdate();
