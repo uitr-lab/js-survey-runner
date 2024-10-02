@@ -523,7 +523,7 @@ export class SurveyRenderer extends EventEmitter {
 
 			console.log(errors);
 			this.disableForwardNavigation();
-			this.emit('failedValidation');
+			this.emit('failedValidation', errors);
 
 		});
 
