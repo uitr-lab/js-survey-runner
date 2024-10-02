@@ -17,6 +17,8 @@ export class AutoValidator extends EventEmitter {
 
         this._renderer=renderer;
 
+        this._lastErrorSet=null;
+
         this._renderer.on('renderPage', ()=>{
 
             renderer.addValidator((formData, pageData, opts)=>{
@@ -68,8 +70,11 @@ export class AutoValidator extends EventEmitter {
                         renderer.getInput(field).removeAttribute('data-validation-error');
                     });
     
+                    this._lastErrorSet=null;
     
                 }).catch(({ errors, fields })=>{
+
+                    this._lastErrorSet=[errors, fields];
     
                     Object.keys(data).forEach((field)=>{
                         if(Object.keys(fields).indexOf(field)==-1){
@@ -104,7 +109,10 @@ export class AutoValidator extends EventEmitter {
                             return;
                         }
     
-                        input.setAttribute('data-validation-error',errors[i].message);
+                        var message=errors[i].message;
+                        var variable=message.split(' ').shift()
+                        message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
+                        input.setAttribute('data-validation-error', message);
                     });
     
                     throw {errors:errors, fields:fields};
@@ -118,6 +126,30 @@ export class AutoValidator extends EventEmitter {
  
 
     }
+
+    showErrors(){
+        if(this._lastErrorSet){
+
+            var renderer=this._renderer;
+            
+            var errors=this._lastErrorSet[0];
+            var fields=this._lastErrorSet[1];
+
+            Object.keys(fields).forEach((field ,i)=>{
+    
+                var input=renderer.getInput(field);
+                if(!input){
+                    return;
+                }
+                var message=errors[i].message;
+                var variable=message.split(' ').shift()
+                message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
+                input.setAttribute('data-validation-error', message);
+
+            });
+        }
+    }
+
 
     _isHidden(el){
         if(el==document.body){

@@ -6,6 +6,7 @@ import {
 	Element
 } from '../Element.js'
 
+import  Schema  from 'async-validator';
 
 export class ListRender extends EventEmitter {
 
@@ -27,10 +28,207 @@ export class ListRender extends EventEmitter {
 			this._throttleUpdate();
 		});
 
+
+		this._isValidated=true;
+		this._lastErrorSet=null;
+
+	}
+
+	getPage(){
+		return this._page;
+	}
+
+	getRenderer(){
+		return this._page.getRenderer();
+	}
+
+	_isHidden(el){
+		
+		if(this.getItems().indexOf(el)>=0){
+			return false;
+		}
+
+		if(el.style.display==='none'){
+			return true;
+		}
+
+		return this._isHidden(el.parentNode);
+
+	
+	}
+
+	autoValidate(){
+
+		this._isValidated=false;
+
+		var renderer=this._page.getRenderer();
+		this._page.addValidator((formData, pageData, opts)=>{
+
+			var data={};
+			var contextData = this._page.getContextData();
+			 this.getItems().forEach((el) => {
+				this._getItemDataInputs(el, contextData).forEach((input)=>{
+
+					if(this._isHidden(input)){
+						return;
+					}
+
+					data[input.name]={
+						type:"string",
+						required:true
+					}
+				})
+			});
+
+			
+
+			const validator = new Schema(data);
+
+			return validator.validate(pageData).then(()=>{
+
+				Object.keys(data).forEach((field)=>{
+					this._page.getInput(field).removeAttribute('data-validation-error');
+				});
+
+				this._isValidated=true;
+				this._lastErrorSet=null;
+
+				this.emit('validation');
+
+				
+
+			}).catch(({ errors, fields })=>{
+
+				this._lastErrorSet=[errors, fields];
+
+				Object.keys(data).forEach((field)=>{
+					if(Object.keys(fields).indexOf(field)==-1){
+						var input=this._page.getInput(field);
+						if(input){
+							input.removeAttribute('data-validation-error');
+						}   
+						return;
+					}
+				});
+				
+				var lastFocus=renderer.getPreviousTarget();
+				var currentFocus=renderer.getCurrentTarget();
+
+				Object.keys(fields).forEach((field ,i)=>{
+
+
+					var input=this._page.getInput(field);
+					if(!input){
+						return;
+					}
+					if(currentFocus){
+						if(currentFocus.compareDocumentPosition(input)===4){
+							/**
+							 * for all inputs after the current target do not add error indicators
+							 */
+							return;
+						}
+					}
+
+					if(opts.showNewWarnings===false){
+						return;
+					}
+
+					var message=errors[i].message;
+					var variable=message.split(' ').shift()
+					message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
+					input.setAttribute('data-validation-error', message);
+				});
+
+				var errors = {errors:errors, fields:fields};
+
+				this._isValidated=false;
+				this.emit('failedValidation', errors);
+
+				throw errors;
+
+			});
+
+		});
+
+
+		this.on('validation',()=>{
+			if(this._addButton){
+				this._addButton.classList.remove('disabled');
+			}
+		})
+
+		this.on('failedValidation',()=>{
+			if(this._addButton){
+				this._addButton.classList.add('disabled');
+			}
+		})
+
+	}
+
+	showErrors(){
+        if(this._lastErrorSet){
+
+			this._pulseErrors();
+
+            var renderer=this.getRenderer();
+            
+            var errors=this._lastErrorSet[0];
+            var fields=this._lastErrorSet[1];
+
+            Object.keys(fields).forEach((field ,i)=>{
+    
+                var input=renderer.getInput(field);
+                if(!input){
+                    return;
+                }
+				var message=errors[i].message;
+				var variable=message.split(' ').shift()
+				message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
+                input.setAttribute('data-validation-error', message);
+                
+            });
+        }
+    }
+
+	isIndexValid(index){
+		if(this.isValid()){
+			return true;
+		}
+		var keys=Object.keys(this._lastErrorSet[1]);
+		var field;
+		for(var i=0;i<keys.length;i++){
+			field=keys[i];
+			var match = field.match(/\d+$/);
+			if (match&&match[0]+""===index+"") {
+				return false;
+			} 
+		}
+
+		return true;
+
+	}
+
+	_pulseErrors(){
+	
+		this.getElement().classList.add('pulse-errors');
+		if(this._pulseTimeout){
+			return;
+		}
+		this._pulseTimeout=setTimeout(()=>{
+			delete this._pulseTimeout;
+			this.getElement().classList.remove('pulse-errors');
+		}, 500)
+
+	}
+
+	isValid(){
+		return this._isValidated;
 	}
 
 	needsUpdate() {
 		this._page.needsUpdate();
+		this._page.getRenderer().needsUpdateValidation();
 	}
 
 	_throttleUpdate() {
@@ -51,14 +249,20 @@ export class ListRender extends EventEmitter {
 	_update() {
 		if (this._currentItem) {
 
+
+			var dataset = this._getDataItem(this._currentItem);
+			var datasetKeys=Object.keys(dataset);
+
 			Object.keys(this._currentItem.dataset).forEach((key) => {
 				if(key=='index'){
 					return;
 				}
-				delete this._currentItem.dataset[key];
+				if(datasetKeys.indexOf(key)>=0){
+					delete this._currentItem.dataset[key];
+				}
 			});
 
-			var dataset = this._getDataItem(this._currentItem);
+			
 
 			Object.keys(dataset).forEach((key) => {
 				this._currentItem.dataset[key] = dataset[key];
@@ -107,22 +311,28 @@ export class ListRender extends EventEmitter {
 		return dataset;
 
 	}
-
-	_getItemDataRaw(itemEl, data) {
+	_getItemDataInputs(itemEl, data){
 
 		data = data || this._page.getContextData();
-
-
-
-		var dataset = {};
-		Array.prototype.slice.call(itemEl.querySelectorAll("*")).forEach((el) => {
+		
+		return Array.prototype.slice.call(itemEl.querySelectorAll("*")).filter((el) => {
 
 			if (el.name) {
 				if (typeof data[el.name] != 'undefined') {
-					dataset[el.name] = el.value;
+					return true;
 				}
 			}
+			return false;
 
+		});
+
+	}
+
+	_getItemDataRaw(itemEl, data) {
+
+		var dataset = {};
+		this._getItemDataInputs(itemEl, data).forEach((el) => {
+			dataset[el.name] = el.value;
 		});
 
 		return dataset;
@@ -218,13 +428,18 @@ export class ListRender extends EventEmitter {
 			"class": "activity-nav nav"
 		}));
 
-		var next = navigation.appendChild(new Element('button', {
+		this._addButton = navigation.appendChild(new Element('button', {
 			html: opt.addLabel || "Add Item",
 			"class": "add-item-btn",
 			events: {
 				click: (e) => {
 					e.stopPropagation();
 					e.preventDefault();
+
+					if(!this.isValid()){
+						this.showErrors();
+						return;
+					}
 
 					// if (this._nextItems.length > 0) {
 					// 	this.setCurrentIndexNext();
@@ -280,6 +495,8 @@ export class ListRender extends EventEmitter {
 			}else{
 				this.setCurrentIndex(index-1);
 			}
+
+			this._throttleUpdate();
 
 		}
 		
@@ -379,6 +596,10 @@ export class ListRender extends EventEmitter {
 				events: {
 					click: () => {
 						if (activityEl != this._currentItem) {
+							if(!this.isValid()){
+								this.showErrors();
+								return;
+							}
 							this.setCurrentItem(activityEl)
 						}
 					}
@@ -411,11 +632,21 @@ export class ListRender extends EventEmitter {
 
 				this._addItemButtons(activityEl, index);
 				this._currentItem=activityEl;
+				if(this._insertThrottleEmit){
+					clearTimeout(this._insertThrottleEmit);
+				}
+				this._insertThrottleEmit=setTimeout(()=>{
+					delete this._insertThrottleEmit;
+					this.emit('select', this.getItems().indexOf(activityEl));
+				}, 100);
+
+
 				this.setCurrentIndex(index);
 				this.emit('addItem', activityEl, index);
+				
 
 				this._autoIndex++;
-
+				this._throttleUpdate();
 
 				if(then){
 					then(activityEl);
@@ -456,17 +687,29 @@ export class ListRender extends EventEmitter {
 	}
 
 	setCurrentIndex(index) {
+
+		var current=this.getCurrentIndex();
+		
+
 		var allItems = this.getItems();
 		allItems.forEach((item) => {
 			item.classList.add('collapse');
 			item.classList.remove('active');
 		});
 
+		
+
 		this._previousItems = allItems.slice(0, index);
 		this._nextItems = allItems.slice(index + 1);
 		this._currentItem = allItems[index];
 		this._currentItem.classList.remove('collapse');
 		this._currentItem.classList.add('active');
+
+		if(current===index){
+			return;
+		}
+
+		this.emit('select', index);
 
 		this._throttleUpdate();
 	}
