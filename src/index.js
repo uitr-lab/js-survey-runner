@@ -945,21 +945,30 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer, page) => {
 	if(item.conditionScript){
 
 		var script=labelTemplate(item.conditionScript, renderer);
-
-		script='(function(){ '+"\n"+script+"\n"+' })() '+renderer.getSourceUrl();
+		var src=renderer.getSourceUrl();
+		script='(function(){ '+"\n"+script+"\n"+' })() '+src
 
 		var checkCondition=()=>{
 
-			var result=((formData, pageData, renderer, page)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer);
+			var defaultShowAllConditionals=false;
+			if(!renderer.getConfigValue('showAllConditionals', defaultShowAllConditionals)){
 
-			if(result===false){
-				fieldset.style.cssText='display:none;';
-				fieldset.classList.add('condition-false');
-				fieldset.classList.remove('condition-true');
-				return;
+			
+				var result=((formData, pageData, renderer, page)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer);
+
+				if(typeof result != 'boolean'){
+					console.warn('Conditional fieldset ('+src+') returned non boolean: '+result+', '+(typeof result))
+				}
+
+				if(result===false){
+					fieldset.style.cssText='display:none;';
+					fieldset.classList.add('condition-false');
+					fieldset.classList.remove('condition-true');
+					return;
+				}
+
+
 			}
-
-
 
 
 			fieldset.style.cssText='';
