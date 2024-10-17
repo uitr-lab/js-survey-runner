@@ -13,6 +13,8 @@ export class FormDataStorage extends EventEmitter {
 		var key='formData';
 		var currentKey=null;
 		var waitingForNamespace=false;
+		this._renderer=renderer;
+		this._options=options;
 
 		renderer.on('update', ()=>{
 
@@ -20,7 +22,7 @@ export class FormDataStorage extends EventEmitter {
 
 			
 
-			if(typeof options.namespaceField=='string'){
+			if(typeof options.namespaceField==='string'){
 
 				if(typeof data[options.namespaceField]!="string"||data[options.namespaceField]===""){
 					waitingForNamespace=true;
@@ -33,24 +35,7 @@ export class FormDataStorage extends EventEmitter {
 				if(waitingForNamespace&&key!==currentKey){
 					currentKey=key;
 					//waitingForNamespace=false;
-
-
-					var loadData=localStorage.getItem(key);
-
-					if(loadData){
-
-						loadData=JSON.parse(loadData);
-
-						Object.keys(loadData).forEach((key)=>{
-							if(key.indexOf('_')===0){
-								//ignore config data
-								delete loadData[key];
-							}
-						})
-
-						renderer.setFormData(loadData);
-					}
-
+					this.loadData(key);
 				}
 
 				
@@ -59,7 +44,33 @@ export class FormDataStorage extends EventEmitter {
 
 
 		});
+
+
+		if(typeof options.namespaceField!=='string'){
+			this._renderer.once('beforeRender', (def, data)=>{
+				this.loadData(key);
+			});			
+		}
 	 
+	 }
+
+	 loadData(key){
+
+		var loadData=localStorage.getItem(key);
+
+		if(loadData){
+
+			loadData=JSON.parse(loadData);
+
+			Object.keys(loadData).forEach((key)=>{
+				if(key.indexOf('_')===0){
+					//ignore config data
+					delete loadData[key];
+				}
+			})
+
+			this._renderer.setFormData(loadData);
+		}
 	 }
 
 }
