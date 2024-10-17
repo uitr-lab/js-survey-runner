@@ -250,6 +250,7 @@ export class SurveyRenderer extends EventEmitter {
 	render(definition, data) {
 
 
+
 		if (typeof definition == 'string') {
 			fetch(definition, {
 				method: 'GET',
@@ -305,12 +306,17 @@ export class SurveyRenderer extends EventEmitter {
 	_render(definition, data) {
 
 
+
 		this._data = definition;
 		this._formData = {}
 
 		if (data) {
 			this.setFormData(data);
 		}
+
+		this.emit('beforeRender', definition, data||{});
+
+
 
 		var form = this._container.appendChild(new Element('form', {
 			"class": "survey-view"
