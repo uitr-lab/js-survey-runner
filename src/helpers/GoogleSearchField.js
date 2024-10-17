@@ -187,9 +187,10 @@ export class GoogleSearchField extends EventEmitter{
 
 
 
-export class GoogleMap {
+export class GoogleMap extends EventEmitter{
 
 	constructor(config) {
+		super();
 		this._config = config || {};
 
 
@@ -288,6 +289,8 @@ export class GoogleMap {
 										this._config.emmiter.emit('geocode.' + input.name, results[0], input.value);
 									}
 
+									this.emit('geocode', input.name, results[0], input.value);
+
 									if (this._config.format) {
 										(new GeocodeFormat()).applyFormat(input, results[0], this._config.format, input.value);
 									}
@@ -306,6 +309,7 @@ export class GoogleMap {
 
 		input.after(btn);
 
+		return this;
 
 	}
 
