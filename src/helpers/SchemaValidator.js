@@ -30,10 +30,26 @@ export class SchemaValidator extends EventEmitter {
 
     setValidationIndicator(field, message, className){
         var input=this._renderer.getInput(field);
-        input.setAttribute('data-validation-error', message);
-        if(className){
-            input.classList.add(className);
+        setTimeout(()=>{
+            input.setAttribute('data-validation-error', message);
+            if(className){
+                input.classList.add(className);
+            }
+        }, 1);
+    }
+
+    static SetValidationErrorIndicator(input, error){
+        // var input=renderer.getInput(field);
+        if(!input){
+            return;
         }
+        var message=error.message;
+        var variable=message.split(' ').shift()
+        message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
+        setTimeout(()=>{
+            input.setAttribute('data-validation-error', message);
+        },1);
+        
     }
 
 

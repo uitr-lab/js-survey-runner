@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import  Schema  from 'async-validator';
-
+import  { SchemaValidator }  from './SchemaValidator.js';
 
 /**
  * Automatically validates all fields are not empty
@@ -108,11 +108,8 @@ export class AutoValidator extends EventEmitter {
                         if(opts.showNewWarnings===false){
                             return;
                         }
-    
-                        var message=errors[i].message;
-                        var variable=message.split(' ').shift()
-                        message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
-                        input.setAttribute('data-validation-error', message);
+
+                        SchemaValidator.SetValidationErrorIndicator(input, errors[i]);
                     });
     
                     throw {errors:errors, fields:fields};
@@ -141,10 +138,8 @@ export class AutoValidator extends EventEmitter {
                 if(!input){
                     return;
                 }
-                var message=errors[i].message;
-                var variable=message.split(' ').shift()
-                message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
-                input.setAttribute('data-validation-error', message);
+
+                SchemaValidator.SetValidationErrorIndicator(input, errors[i])
 
             });
         }

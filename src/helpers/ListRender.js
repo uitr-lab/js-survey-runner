@@ -7,6 +7,7 @@ import {
 } from '../Element.js'
 
 import  Schema  from 'async-validator';
+import  { SchemaValidator }  from './SchemaValidator.js';
 
 export class ListRender extends EventEmitter {
 
@@ -134,10 +135,7 @@ export class ListRender extends EventEmitter {
 						return;
 					}
 
-					var message=errors[i].message;
-					var variable=message.split(' ').shift()
-					message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
-					input.setAttribute('data-validation-error', message);
+					SchemaValidator.SetValidationErrorIndicator(input, errors[i]);
 				});
 
 				var errors = {errors:errors, fields:fields};
@@ -182,10 +180,8 @@ export class ListRender extends EventEmitter {
                 if(!input){
                     return;
                 }
-				var message=errors[i].message;
-				var variable=message.split(' ').shift()
-				message=(variable.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/\d+$/, '')+" "+(message.split(' ').slice(1).join(' '))).toLowerCase();
-                input.setAttribute('data-validation-error', message);
+
+				SchemaValidator.SetValidationErrorIndicator(input, errors[i]);
                 
             });
         }
@@ -241,7 +237,7 @@ export class ListRender extends EventEmitter {
 			this._updateTimeout = null;
 			this._update();
 
-		}, 250);
+		}, 150);
 
 
 
