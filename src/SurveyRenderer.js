@@ -808,7 +808,7 @@ export class SurveyRenderer extends EventEmitter {
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
-	_executeBackNavigationLogic(data) {
+	_executeBackNavigationLogic(data, previous) {
 
 		return ((formData, pageData, renderer) => {
 			return eval('(function(){ ' + "\n\n" + data.backLogic + "\n\n" + ' })()' + this.getSourceUrl('backNavigation'));
@@ -822,7 +822,7 @@ export class SurveyRenderer extends EventEmitter {
 		})(this.getFormData(), this.getPageData(), this);
 	}
 
-	_executeOnNavigationExitLogic(data) {
+	_executeOnNavigationExitLogic(data, next) {
 
 		return ((formData, pageData, renderer) => {
 			return eval('(function(){ ' + "\n\n" + data.exitLogic + "\n\n" + ' })()' + this.getSourceUrl('exit'));
@@ -876,7 +876,7 @@ export class SurveyRenderer extends EventEmitter {
 		}
 
 		this._element.innerHTML = ''; //would like a nicer way to clear
-		this._executeOnNavigationExitLogic(this._stack[this._stack.length - 1]);
+		this._executeOnNavigationExitLogic(this._stack[this._stack.length - 1], node);
 		this._renderNode(node);
 
 	}
@@ -890,10 +890,12 @@ export class SurveyRenderer extends EventEmitter {
 		var current = this._stack.pop();
 
 
-		this._executeBackNavigationLogic(current);
-		this._executeOnNavigationExitLogic(current);
-
 		var last = this._stack.pop();
+
+		this._executeBackNavigationLogic(current, last);
+		this._executeOnNavigationExitLogic(current, last);
+
+		
 		this._renderNode(last);
 
 	}
@@ -982,7 +984,7 @@ export class SurveyRenderer extends EventEmitter {
 						}
 
 
-						this._executeOnNavigationExitLogic(data);
+						this._executeOnNavigationExitLogic(data, nextNode);
 						this._renderNode(nextNode);
 
 					};
