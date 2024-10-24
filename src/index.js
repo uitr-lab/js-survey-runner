@@ -397,7 +397,9 @@ SurveyRenderer.addFormatter('map', (input, item, format, renderer)=>{
 			console.error('missing renderer.setConfigValue("googleMapZoom", z)');
 			return 10;
 		})
-	})).addMapOverlayButton(input);
+	})).addMapOverlayButton(input).on('geocode', ()=>{
+		renderer.needsUpdateValidation();
+	});
 
 });
 
@@ -481,6 +483,10 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer, page) => {
 
 	checkbox.addEventListener('change',()=>{
 		if(!checkbox.checked){
+			if(item.disableAutoToggle==="on"){
+				renderer.updateFormValue(fieldName, "");
+				return;
+			}
 			renderer.updateFormValue(fieldName, "off");
 		}
 	});
@@ -502,9 +508,18 @@ SurveyRenderer.addItem('checkbox', (item, container, renderer, page) => {
 		}
 
 		checkbox.addEventListener('change',()=>{
+			if(item.disableAutoToggle==="on"&&!checkbox.checked){
+				return;
+			}
 			checkboxNo.checked=!checkbox.checked;
 		});
 		checkboxNo.addEventListener('change',()=>{
+
+			if(item.disableAutoToggle==="on"&&!checkboxNo.checked){
+				renderer.updateFormValue(fieldName, "");
+				return;
+			}
+
 
 			checkbox.checked=!checkboxNo.checked;
 			if(!checkbox.checked){
