@@ -55,6 +55,8 @@ export class LoopRender {
 				i++;
 			}
 
+			this._page.getRenderer().needsUpdateValidation();
+
 		};
 
 		//setTimeout(()=>{
