@@ -229,7 +229,14 @@ SurveyRenderer.addFormatter('date', (input, item)=>{
 });
 
 SurveyRenderer.addFormatter('month', (input, item)=>{
-	input.type='month'
+	input.type='month';
+	if(input.type!=='month'){
+		/*
+		 * fallback if month is not supported just use date;
+		 */
+		input.classList.add('month-fallback');
+		input.type='date';
+	}
 });
 
 SurveyRenderer.addFormatter('auto-email', (input, item)=>{

@@ -895,7 +895,7 @@ export class SurveyRenderer extends EventEmitter {
 		this._executeBackNavigationLogic(current, last);
 		this._executeOnNavigationExitLogic(current, last);
 
-		
+		this._element.innerHTML = ''; //would like a nicer way to clear
 		this._renderNode(last);
 
 	}
