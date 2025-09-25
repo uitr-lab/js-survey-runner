@@ -510,26 +510,47 @@ export class SurveyRenderer extends EventEmitter {
 	_validate(opts) {
 
 		opts = opts || {};
+		var sharedErrors=[];
+		var sharedResults=[]
 
 		Promise.all((this._validators || []).map((validator) => {
 
 			return new Promise((resolve, reject) => {
 
-				resolve(validator(this.getFormData(), this.getPageData(), opts));
+				try{
+					var result=validator(this.getFormData(), this.getPageData(), opts, sharedErrors, sharedResults);
+					if(result instanceof Promise ){
+						return result.catch((error)=>{
+							sharedErrors.push(error);
+							resolve();
+						}).then((result)=>{
+							sharedResults.push(result);
+							resolve(result);
+						});
+					}
+
+					resolve(result);
+
+				}catch(error){
+					sharedErrors.push(error);
+					resolve();
+				}
 
 			});
 
 		})).then((results) => {
 
-			console.log(results);
-			this.enableForwardNavigation();
-			this.emit('validation');
+			if(sharedErrors.length==0){
+				console.log(results);
+				this.enableForwardNavigation();
+				this.emit('validation');
+				return;
+			}
+			
 
-		}).catch((errors) => {
-
-			console.log(errors);
+			console.log(sharedErrors);
 			this.disableForwardNavigation();
-			this.emit('failedValidation', errors);
+			this.emit('failedValidation', sharedErrors);
 
 		});
 
