@@ -21,7 +21,7 @@ export class AutoValidator extends EventEmitter {
 
         this._renderer.on('renderPage', ()=>{
 
-            renderer.addValidator((formData, pageData, opts)=>{
+            renderer.addValidator((formData, pageData, opts, sharedErrors, sharedResults)=>{
 
                 var data={};
                 var keys=Object.keys(pageData).filter((k)=>{
@@ -64,9 +64,15 @@ export class AutoValidator extends EventEmitter {
 
                 const validator = new Schema(data);
 
-                return validator.validate(pageData).then(()=>{
+                return (new Promise((resolve)=>{
+                    // setTimeout(resolve, 100);
+                    resolve();
+                })).then(()=>{ return validator.validate(pageData); }).then(()=>{
     
                     Object.keys(data).forEach((field)=>{
+                        if(this._sharedErrorsContains(sharedErrors, field)){
+                            return; //skip
+                        }
                         renderer.getInput(field).removeAttribute('data-validation-error');
                     });
     
@@ -80,6 +86,9 @@ export class AutoValidator extends EventEmitter {
                         if(Object.keys(fields).indexOf(field)==-1){
                             var input=renderer.getInput(field);
                             if(input){
+                                if(this._sharedErrorsContains(sharedErrors, field)){
+                                    return; //skip
+                                }
                                 input.removeAttribute('data-validation-error');
                             }   
                             return;
@@ -122,6 +131,16 @@ export class AutoValidator extends EventEmitter {
         });
  
 
+    }
+
+    _sharedErrorsContains(sharedErrors, field){
+        for(var i=0;i<sharedErrors.length;i++){
+            var fields=sharedErrors[i].fields;
+            if(Object.keys(fields).indexOf(field)>=0){
+                return true;
+            }
+        }
+        return false;
     }
 
     showErrors(){
