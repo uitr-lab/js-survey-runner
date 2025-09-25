@@ -63,7 +63,7 @@ export class ListRender extends EventEmitter {
 		this._isValidated=false;
 
 		var renderer=this._page.getRenderer();
-		this._page.addValidator((formData, pageData, opts)=>{
+		this._page.addValidator((formData, pageData, opts, sharedErrors, sharedResults)=>{
 
 			var data={};
 			var contextData = this._page.getContextData();
@@ -87,6 +87,10 @@ export class ListRender extends EventEmitter {
 
 			return validator.validate(pageData).then(()=>{
 
+				if(this._validationErrors&&Object.keys(this._validationErrors).length>0){
+					throw this._validationErrors[Object.keys(this._validationErrors)[0]]; //throw the first one.!
+				}
+
 				Object.keys(data).forEach((field)=>{
 					this._page.getInput(field).removeAttribute('data-validation-error');
 				});
@@ -99,6 +103,20 @@ export class ListRender extends EventEmitter {
 				
 
 			}).catch(({ errors, fields })=>{
+
+
+				if(this._validationErrors){
+					Object.keys(this._validationErrors).forEach((name)=>{
+						var errorFields=Object.keys(this._validationErrors[name].fields);
+						errorFields.forEach((field, i)=>{
+							if(typeof fields[field]=="undefined"){
+								errors.push(this._validationErrors[name].errors[i])
+								fields[field]=this._validationErrors[name].fields[field]
+							}
+						});
+						
+					});
+				}
 
 				this._lastErrorSet=[errors, fields];
 
@@ -117,6 +135,7 @@ export class ListRender extends EventEmitter {
 
 				Object.keys(fields).forEach((field ,i)=>{
 
+					
 
 					var input=this._page.getInput(field);
 					if(!input){
@@ -131,7 +150,7 @@ export class ListRender extends EventEmitter {
 						}
 					}
 
-					if(opts.showNewWarnings===false){
+					if(opts.showNewWarnings===false && ((!errors[i].forceDisplay)||errors[i].forceDisplay!==true)){
 						return;
 					}
 
@@ -163,6 +182,20 @@ export class ListRender extends EventEmitter {
 		})
 
 	}
+
+	addValidationErrors(name, errors){
+		if(!this._validationErrors){
+			this._validationErrors={};
+		}
+		this._validationErrors[name]=errors;
+	}
+    removeValidationErrors(name){
+		if(!this._validationErrors){
+			return;
+		}
+		delete this._validationErrors[name];
+	}
+	
 
 	showErrors(){
         if(this._lastErrorSet){
