@@ -11,6 +11,8 @@ export class LoopRender {
 			"class": "loop-render"
 		}));
 
+		this.container=wrap;
+
 		var listItems = [];
 		var _lastNum = -1
 		var renderLoop = () => {
@@ -41,6 +43,7 @@ export class LoopRender {
 					var vehicleEl = wrap.appendChild(new Element('div', {
 						"class": "loop-item loop-item-" + i
 					}));
+					vehicleEl.dataset['index']=i
 					listItems[i]=vehicleEl;
 					this._page.withVariables({ "loopIndex": i }, () => {
 						return defaultRenderFn(vehicleEl);
