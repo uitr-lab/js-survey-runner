@@ -11,6 +11,7 @@ import {
 import {
 	ListRender
 } from './helpers/ListRender.js';
+import { SelectionSortRender } from './helpers/SelectionSortRender.js';
 
 export class PageRenderer extends EventEmitter {
 
@@ -123,6 +124,10 @@ export class PageRenderer extends EventEmitter {
 
 	renderLoop(key, renderFn, container, options){
 		return (new LoopRender(this)).renderFieldValueCount(key, renderFn, container, options);
+	}
+
+	renderSelectionSort(key, renderFn, container, options){
+		return (new SelectionSortRender(this)).renderSortLoop(key, renderFn, container, options);
 	}
 
 	renderList(renderFn, container, options){
