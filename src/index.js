@@ -976,7 +976,7 @@ SurveyRenderer.addItem('fieldset', (item, container, renderer, page) => {
 			if(!renderer.getConfigValue('showAllConditionals', defaultShowAllConditionals)){
 
 			
-				var result=((formData, pageData, renderer, page)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer);
+				var result=((formData, pageData, renderer, page)=>{ return eval(script)})( renderer.getFormData(), renderer.getPageData(), renderer, renderer.getPage());
 
 				if(typeof result != 'boolean'){
 					console.warn('Conditional fieldset ('+src+') returned non boolean: '+result+', '+(typeof result))
